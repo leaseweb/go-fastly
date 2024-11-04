@@ -6,10 +6,10 @@ import (
 
 // StatsResponse is a response from the service stats API endpoint.
 type StatsResponse struct {
-	Data    []*Stats          `mapstructure:"data"`
-	Message *string           `mapstructure:"msg"`
-	Meta    map[string]string `mapstructure:"meta"`
-	Status  *string           `mapstructure:"status"`
+	Data    map[string][]*Stats `mapstructure:"data"`
+	Message *string             `mapstructure:"msg"`
+	Meta    map[string]string   `mapstructure:"meta"`
+	Status  *string             `mapstructure:"status"`
 }
 
 // Stats represent metrics of a Fastly service.
