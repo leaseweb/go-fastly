@@ -210,6 +210,15 @@ func (c *Client) Get(p string, ro *RequestOptions) (*http.Response, error) {
 	return c.Request(http.MethodGet, p, ro)
 }
 
+// Get issues an HTTP GET request with params as url values.
+func (c *Client) GetWithUrlValues(p string, ro *RequestOptionsMultipleDomains) (*http.Response, error) {
+	if ro == nil {
+		ro = new(RequestOptionsMultipleDomains)
+	}
+	ro.Parallel = true
+	return c.RequestWithUrlValues(http.MethodGet, p, ro)
+}
+
 // GetJSON issues an HTTP GET request and indicates that the response
 // should be JSON encoded.
 func (c *Client) GetJSON(p string, ro *RequestOptions) (*http.Response, error) {
@@ -397,6 +406,80 @@ func (c *Client) Request(verb, p string, ro *RequestOptions) (*http.Response, er
 	return resp, nil
 }
 
+// Request makes an HTTP request against the HTTPClient using the given verb and params as url values,
+// Path, and request options.
+func (c *Client) RequestWithUrlValues(verb, p string, ro *RequestOptionsMultipleDomains) (*http.Response, error) {
+	req, err := c.RawRequestWithUrlValues(verb, p, ro)
+	if err != nil {
+		return nil, err
+	}
+
+	if ro == nil || !ro.Parallel {
+		c.updateLock.Lock()
+		defer c.updateLock.Unlock()
+	}
+
+	// if a context is provided, set the context on the request
+	if ro != nil && ro.Context != nil {
+		req = req.WithContext(ro.Context)
+	}
+
+	if c.DebugMode {
+		var r *http.Request
+		if ro != nil && ro.Context != nil {
+			r = req.Clone(ro.Context)
+		} else {
+			r = req.Clone(context.Background())
+		}
+		// 'r' and 'req' both have a reference to a Body that
+		// is an io.Reader, but only one of them can read its
+		// contents since io.Reader is not seekable and cannot
+		// be rewound
+
+		r.Header.Del(APIKeyHeader)
+		dump, _ := httputil.DumpRequest(r, true)
+
+		// httputil.DumpRequest has read the Body from 'r',
+		// and set r.Body to an io.ReadCloser that will return
+		// the same bytes as the original Body, so we can
+		// stuff that into 'req' for when the request is
+		// actually sent; it can't be read in 'r', but the
+		// lifetime of 'r' ends at the end of this block
+		req.Body = r.Body
+
+		fmt.Printf("http.Request (dump): %q\n", dump)
+	}
+
+	// nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
+	resp, err := checkResp(c.HTTPClient.Do(req))
+
+	if c.DebugMode && resp != nil {
+		dump, _ := httputil.DumpResponse(resp, true)
+		fmt.Printf("http.Response (dump): %q\n", dump)
+	}
+
+	if err != nil {
+		return resp, err
+	}
+
+	if verb != http.MethodGet && verb != http.MethodHead {
+		remaining := resp.Header.Get("Fastly-RateLimit-Remaining")
+		if remaining != "" {
+			if val, err := strconv.Atoi(remaining); err == nil {
+				c.remaining = val
+			}
+		}
+		reset := resp.Header.Get("Fastly-RateLimit-Reset")
+		if reset != "" {
+			if val, err := strconv.ParseInt(reset, 10, 64); err == nil {
+				c.reset = val
+			}
+		}
+	}
+
+	return resp, nil
+}
+
 // RequestOptions is the list of options to pass to the request.
 type RequestOptions struct {
 	// Body is an io.Reader object that will be streamed or uploaded with the
@@ -416,6 +499,29 @@ type RequestOptions struct {
 	Parallel bool
 	// Params is a map of key-value pairs that will be added to the Request.
 	Params map[string]string
+	// Context is a context.Context object that will be set to the Request's context.
+	Context context.Context
+}
+
+// RequestOptionsMultipleDomains is the list of options to pass to the request. CHANGE IT
+type RequestOptionsMultipleDomains struct {
+	// Body is an io.Reader object that will be streamed or uploaded with the
+	// Request.
+	Body io.Reader
+	// BodyLength is the final size of the Body.
+	BodyLength int64
+	// Headers is a map of key-value pairs that will be added to the Request.
+	Headers map[string]string
+	// HealthCheckHeaders indicates if there is any special parsing required to
+	// support the health check API endpoint (refer to client.RequestForm).
+	//
+	// TODO: Lookout for this when it comes to the future code-generated API
+	// client world, as this special case might get omitted accidentally.
+	HealthCheckHeaders bool
+	// Can this request run in parallel
+	Parallel bool
+	// Params is a map of key-value pairs that will be added to the Request.
+	Params url.Values
 	// Context is a context.Context object that will be set to the Request's context.
 	Context context.Context
 }
@@ -442,6 +548,46 @@ func (c *Client) RawRequest(verb, p string, ro *RequestOptions) (*http.Request, 
 		params.Add(k, v)
 	}
 	request.URL.RawQuery = params.Encode()
+
+	// Set the API key.
+	if len(c.apiKey) > 0 {
+		request.Header.Set(APIKeyHeader, c.apiKey)
+	}
+
+	// Set the User-Agent.
+	request.Header.Set("User-Agent", UserAgent)
+
+	// Add any custom headers.
+	for k, v := range ro.Headers {
+		request.Header.Add(k, v)
+	}
+
+	// Add Content-Length if we have it.
+	if ro.BodyLength > 0 {
+		request.ContentLength = ro.BodyLength
+	}
+
+	return request, nil
+}
+
+// RawRequestWithUrlValues accepts a verb, URL, and RequestOptions (as url values) struct and returns the
+// constructed http.Request and any errors that occurred.
+func (c *Client) RawRequestWithUrlValues(verb, p string, ro *RequestOptionsMultipleDomains) (*http.Request, error) {
+	// Ensure we have request options.
+	if ro == nil {
+		ro = new(RequestOptionsMultipleDomains)
+	}
+
+	// Append the path to the URL.
+	u := strings.TrimRight(c.url.String(), "/") + "/" + strings.TrimLeft(p, "/")
+
+	// Create the request object.
+	request, err := http.NewRequest(verb, u, ro.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	request.URL.RawQuery = ro.Params.Encode()
 
 	// Set the API key.
 	if len(c.apiKey) > 0 {
