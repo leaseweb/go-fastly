@@ -43,20 +43,18 @@ func (i *ListTLSActivationsInput) formatFilters() map[string]string {
 		"filter[tls_configuration.id]": i.FilterTLSConfigurationID,
 		"filter[tls_domain.id]":        i.FilterTLSDomainID,
 		"include":                      i.Include,
-		"page[number]":                 i.PageNumber,
-		"page[size]":                   i.PageSize,
+		jsonapi.QueryParamPageNumber:   i.PageNumber,
+		jsonapi.QueryParamPageSize:     i.PageSize,
 	}
 
 	for key, value := range pairings {
-		switch t := reflect.TypeOf(value).String(); t {
-		case "string":
-			if value != "" {
-				v, _ := value.(string) // type assert to avoid runtime panic (v will have zero value for its type)
+		switch v := value.(type) {
+		case string:
+			if v != "" {
 				result[key] = v
 			}
-		case "int":
-			if value != 0 {
-				v, _ := value.(int) // type assert to avoid runtime panic (v will have zero value for its type)
+		case int:
+			if v != 0 {
 				result[key] = strconv.Itoa(v)
 			}
 		}
@@ -71,7 +69,7 @@ func (c *Client) ListTLSActivations(i *ListTLSActivationsInput) ([]*TLSActivatio
 	filters := &RequestOptions{
 		Params: i.formatFilters(),
 		Headers: map[string]string{
-			"Accept": "application/vnd.api+json", // this is required otherwise the filters don't work
+			"Accept": jsonapi.MediaType, // this is required otherwise the filters don't work
 		},
 	}
 
@@ -116,7 +114,7 @@ func (c *Client) GetTLSActivation(i *GetTLSActivationInput) (*TLSActivation, err
 
 	ro := &RequestOptions{
 		Headers: map[string]string{
-			"Accept": "application/vnd.api+json", // this is required otherwise the params don't work
+			"Accept": jsonapi.MediaType, // this is required otherwise the params don't work
 		},
 	}
 
@@ -223,6 +221,10 @@ func (c *Client) DeleteTLSActivation(i *DeleteTLSActivationInput) error {
 
 	path := ToSafeURL("tls", "activations", i.ID)
 
-	_, err := c.Delete(path, nil)
-	return err
+	ignored, err := c.Delete(path, nil)
+	if err != nil {
+		return err
+	}
+	defer ignored.Body.Close()
+	return nil
 }

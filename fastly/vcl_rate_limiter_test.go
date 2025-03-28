@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 )
@@ -9,16 +10,16 @@ func TestClient_ERL(t *testing.T) {
 	t.Parallel()
 
 	fixtureBase := "erls/"
-	testVersion := createTestVersion(t, fixtureBase+"version", testServiceID)
+	testVersion := CreateTestVersion(t, fixtureBase+"version", TestDeliveryServiceID)
 
 	// Create
 	var (
 		e   *ERL
 		err error
 	)
-	record(t, fixtureBase+"create", func(c *Client) {
+	Record(t, fixtureBase+"create", func(c *Client) {
 		e, err = c.CreateERL(&CreateERLInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *testVersion.Number,
 			Name:           ToPointer("test_erl"),
 			Action:         ToPointer(ERLActionResponse),
@@ -31,8 +32,8 @@ func TestClient_ERL(t *testing.T) {
 			},
 			PenaltyBoxDuration: ToPointer(30),
 			Response: &ERLResponseType{
-				ERLStatus:      ToPointer(429),
-				ERLContentType: ToPointer("application/json"),
+				ERLStatus:      ToPointer(http.StatusTooManyRequests),
+				ERLContentType: ToPointer(JSONMimeType),
 				ERLContent:     ToPointer("Too many requests"),
 			},
 			RpsLimit:   ToPointer(20),
@@ -45,7 +46,7 @@ func TestClient_ERL(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, fixtureBase+"cleanup", func(c *Client) {
+		Record(t, fixtureBase+"cleanup", func(c *Client) {
 			_ = c.DeleteERL(&DeleteERLInput{
 				ERLID: *e.RateLimiterID,
 			})
@@ -61,18 +62,18 @@ func TestClient_ERL(t *testing.T) {
 	if *e.Response.ERLContent != "Too many requests" {
 		t.Errorf("want 'Too many requests', got %q", *e.Response.ERLContent)
 	}
-	if *e.Response.ERLContentType != "application/json" {
+	if *e.Response.ERLContentType != JSONMimeType {
 		t.Errorf("want 'application/json', got %q", *e.Response.ERLContentType)
 	}
-	if *e.Response.ERLStatus != 429 {
+	if *e.Response.ERLStatus != http.StatusTooManyRequests {
 		t.Errorf("want 429, got %q", *e.Response.ERLStatus)
 	}
 
 	// List
 	var es []*ERL
-	record(t, fixtureBase+"list", func(c *Client) {
+	Record(t, fixtureBase+"list", func(c *Client) {
 		es, err = c.ListERLs(&ListERLsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *testVersion.Number,
 		})
 	})
@@ -89,7 +90,7 @@ func TestClient_ERL(t *testing.T) {
 
 	// Get
 	var ge *ERL
-	record(t, fixtureBase+"get", func(c *Client) {
+	Record(t, fixtureBase+"get", func(c *Client) {
 		ge, err = c.GetERL(&GetERLInput{
 			ERLID: *e.RateLimiterID,
 		})
@@ -103,7 +104,7 @@ func TestClient_ERL(t *testing.T) {
 
 	// Update
 	var ua *ERL
-	record(t, fixtureBase+"update", func(c *Client) {
+	Record(t, fixtureBase+"update", func(c *Client) {
 		ua, err = c.UpdateERL(&UpdateERLInput{
 			ERLID: *e.RateLimiterID,
 			Name:  ToPointer("test_erl"),
@@ -117,7 +118,7 @@ func TestClient_ERL(t *testing.T) {
 	}
 
 	// Delete
-	record(t, fixtureBase+"delete", func(c *Client) {
+	Record(t, fixtureBase+"delete", func(c *Client) {
 		err = c.DeleteERL(&DeleteERLInput{
 			ERLID: *ge.RateLimiterID,
 		})
@@ -128,9 +129,9 @@ func TestClient_ERL(t *testing.T) {
 
 	// Create logger type
 	var elog *ERL
-	record(t, fixtureBase+"logger_create", func(c *Client) {
+	Record(t, fixtureBase+"logger_create", func(c *Client) {
 		elog, err = c.CreateERL(&CreateERLInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *testVersion.Number,
 			Name:           ToPointer("test_erl"),
 			Action:         ToPointer(ERLActionLogOnly),
@@ -153,7 +154,7 @@ func TestClient_ERL(t *testing.T) {
 	}
 
 	defer func() {
-		record(t, fixtureBase+"logger_cleanup", func(c *Client) {
+		Record(t, fixtureBase+"logger_cleanup", func(c *Client) {
 			_ = c.DeleteERL(&DeleteERLInput{
 				ERLID: *elog.RateLimiterID,
 			})
@@ -171,63 +172,63 @@ func TestClient_ERL(t *testing.T) {
 
 func TestClient_ListERLs_validation(t *testing.T) {
 	var err error
-	_, err = testClient.ListERLs(&ListERLsInput{
+	_, err = TestClient.ListERLs(&ListERLsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("error: %s", err)
 	}
 
-	_, err = testClient.ListERLs(&ListERLsInput{
+	_, err = TestClient.ListERLs(&ListERLsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("error: %s", err)
 	}
 }
 
 func TestClient_CreateERL_validation(t *testing.T) {
 	var err error
-	_, err = testClient.CreateERL(&CreateERLInput{
+	_, err = TestClient.CreateERL(&CreateERLInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("error: %s", err)
 	}
 
-	_, err = testClient.CreateERL(&CreateERLInput{
+	_, err = TestClient.CreateERL(&CreateERLInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("error: %s", err)
 	}
 }
 
 func TestClient_GetERL_validation(t *testing.T) {
-	_, err := testClient.GetERL(&GetERLInput{
+	_, err := TestClient.GetERL(&GetERLInput{
 		ERLID: "",
 	})
-	if err != ErrMissingERLID {
+	if !errors.Is(err, ErrMissingERLID) {
 		t.Errorf("error: %s", err)
 	}
 }
 
 func TestClient_UpdateERL_validation(t *testing.T) {
-	_, err := testClient.UpdateERL(&UpdateERLInput{
+	_, err := TestClient.UpdateERL(&UpdateERLInput{
 		ERLID: "",
 	})
-	if err != ErrMissingERLID {
+	if !errors.Is(err, ErrMissingERLID) {
 		t.Errorf("error: %s", err)
 	}
 }
 
 func TestClient_DeleteERL_validation(t *testing.T) {
-	err := testClient.DeleteERL(&DeleteERLInput{
+	err := TestClient.DeleteERL(&DeleteERLInput{
 		ERLID: "",
 	})
-	if err != ErrMissingERLID {
+	if !errors.Is(err, ErrMissingERLID) {
 		t.Errorf("error: %s", err)
 	}
 }

@@ -48,7 +48,7 @@ func (c *Client) ListTokens(_ *ListTokensInput) ([]*Token, error) {
 	defer resp.Body.Close()
 
 	var t []*Token
-	if err := decodeBodyMap(resp.Body, &t); err != nil {
+	if err := DecodeBodyMap(resp.Body, &t); err != nil {
 		return nil, err
 	}
 	return t, nil
@@ -75,7 +75,7 @@ func (c *Client) ListCustomerTokens(i *ListCustomerTokensInput) ([]*Token, error
 	defer resp.Body.Close()
 
 	var t []*Token
-	if err := decodeBodyMap(resp.Body, &t); err != nil {
+	if err := DecodeBodyMap(resp.Body, &t); err != nil {
 		return nil, err
 	}
 	return t, nil
@@ -93,7 +93,7 @@ func (c *Client) GetTokenSelf() (*Token, error) {
 	defer resp.Body.Close()
 
 	var t *Token
-	if err := decodeBodyMap(resp.Body, &t); err != nil {
+	if err := DecodeBodyMap(resp.Body, &t); err != nil {
 		return nil, err
 	}
 
@@ -118,10 +118,11 @@ type CreateTokenInput struct {
 
 // CreateToken creates a new resource.
 func (c *Client) CreateToken(i *CreateTokenInput) (*Token, error) {
-	_, err := c.PostForm("/sudo", i, nil)
+	ignored, err := c.PostForm("/sudo", i, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer ignored.Body.Close()
 
 	resp, err := c.PostForm("/tokens", i, nil)
 	if err != nil {
@@ -130,7 +131,7 @@ func (c *Client) CreateToken(i *CreateTokenInput) (*Token, error) {
 	defer resp.Body.Close()
 
 	var t *Token
-	if err := decodeBodyMap(resp.Body, &t); err != nil {
+	if err := DecodeBodyMap(resp.Body, &t); err != nil {
 		return nil, err
 	}
 	return t, nil
@@ -194,6 +195,10 @@ func (c *Client) BatchDeleteTokens(i *BatchDeleteTokensInput) error {
 	if len(i.Tokens) == 0 {
 		return ErrMissingTokensValue
 	}
-	_, err := c.DeleteJSONAPIBulk("/tokens", i.Tokens, nil)
-	return err
+	ignored, err := c.DeleteJSONAPIBulk("/tokens", i.Tokens, nil)
+	if err != nil {
+		return err
+	}
+	defer ignored.Body.Close()
+	return nil
 }

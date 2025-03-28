@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/google/go-querystring/query"
@@ -11,15 +12,15 @@ func TestClient_Settings(t *testing.T) {
 
 	var err error
 	var tv *Version
-	record(t, "settings/version", func(c *Client) {
+	Record(t, "settings/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
 	// Get
 	var ns *Settings
-	record(t, "settings/get", func(c *Client) {
+	Record(t, "settings/get", func(c *Client) {
 		ns, err = c.GetSettings(&GetSettingsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -32,9 +33,9 @@ func TestClient_Settings(t *testing.T) {
 
 	// Update
 	var us *Settings
-	record(t, "settings/update", func(c *Client) {
+	Record(t, "settings/update", func(c *Client) {
 		us, err = c.UpdateSettings(&UpdateSettingsInput{
-			ServiceID:       testServiceID,
+			ServiceID:       TestDeliveryServiceID,
 			ServiceVersion:  *tv.Number,
 			DefaultTTL:      ToPointer(uint(1800)),
 			StaleIfError:    ToPointer(true),
@@ -77,36 +78,36 @@ func TestClient_UpdateSettingsInput_default_ttl(t *testing.T) {
 
 func TestClient_GetSettings_validation(t *testing.T) {
 	var err error
-	_, err = testClient.GetSettings(&GetSettingsInput{
+	_, err = TestClient.GetSettings(&GetSettingsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetSettings(&GetSettingsInput{
+	_, err = TestClient.GetSettings(&GetSettingsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_UpdateSettings_validation(t *testing.T) {
 	var err error
-	_, err = testClient.UpdateSettings(&UpdateSettingsInput{
+	_, err = TestClient.UpdateSettings(&UpdateSettingsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateSettings(&UpdateSettingsInput{
+	_, err = TestClient.UpdateSettings(&UpdateSettingsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

@@ -61,7 +61,7 @@ func (c *Client) CreateManagedLogging(i *CreateManagedLoggingInput) (*ManagedLog
 	defer resp.Body.Close()
 
 	var m *ManagedLogging
-	if err := decodeBodyMap(resp.Body, &m); err != nil {
+	if err := DecodeBodyMap(resp.Body, &m); err != nil {
 		return nil, err
 	}
 	return m, nil
@@ -92,6 +92,10 @@ func (c *Client) DeleteManagedLogging(i *DeleteManagedLoggingInput) error {
 		return ErrNotImplemented
 	}
 
-	_, err := c.Delete(path, nil)
-	return err
+	ignored, err := c.Delete(path, nil)
+	if err != nil {
+		return err
+	}
+	defer ignored.Body.Close()
+	return nil
 }

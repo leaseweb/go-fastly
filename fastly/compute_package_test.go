@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"os"
 	"testing"
 )
@@ -10,7 +11,7 @@ func TestClient_Package(t *testing.T) {
 	nameSuffix := "package"
 
 	testService := createTestServiceWasm(t, fixtureBase+"service_create", nameSuffix)
-	testVersion := createTestVersion(t, fixtureBase+"service_version", *testService.ServiceID)
+	testVersion := CreateTestVersion(t, fixtureBase+"service_version", *testService.ServiceID)
 	defer deleteTestService(t, fixtureBase+"service_delete", *testService.ServiceID)
 
 	testData := Package{
@@ -30,7 +31,7 @@ func TestClient_Package(t *testing.T) {
 
 	// Update with valid package file path
 
-	recordIgnoreBody(t, fixtureBase+"update", func(c *Client) {
+	RecordIgnoreBody(t, fixtureBase+"update", func(c *Client) {
 		wp, err = c.UpdatePackage(&UpdatePackageInput{
 			ServiceID:      *testService.ServiceID,
 			ServiceVersion: *testVersion.Number,
@@ -48,7 +49,7 @@ func TestClient_Package(t *testing.T) {
 	}
 
 	// Get
-	record(t, fixtureBase+"get", func(c *Client) {
+	Record(t, fixtureBase+"get", func(c *Client) {
 		wp, err = c.GetPackage(&GetPackageInput{
 			ServiceID:      *testService.ServiceID,
 			ServiceVersion: *testVersion.Number,
@@ -90,7 +91,7 @@ func TestClient_Package(t *testing.T) {
 	// Update with valid package bytes
 
 	validPackageContent, _ := os.ReadFile("test_assets/package/valid.tar.gz")
-	recordIgnoreBody(t, fixtureBase+"update", func(c *Client) {
+	RecordIgnoreBody(t, fixtureBase+"update", func(c *Client) {
 		wp, err = c.UpdatePackage(&UpdatePackageInput{
 			ServiceID:      *testService.ServiceID,
 			ServiceVersion: *testVersion.Number,
@@ -108,7 +109,7 @@ func TestClient_Package(t *testing.T) {
 	}
 
 	// Get
-	record(t, fixtureBase+"get", func(c *Client) {
+	Record(t, fixtureBase+"get", func(c *Client) {
 		wp, err = c.GetPackage(&GetPackageInput{
 			ServiceID:      *testService.ServiceID,
 			ServiceVersion: *testVersion.Number,
@@ -146,7 +147,7 @@ func TestClient_Package(t *testing.T) {
 
 	// Update with invalid package file path
 
-	recordIgnoreBody(t, fixtureBase+"update_invalid", func(c *Client) {
+	RecordIgnoreBody(t, fixtureBase+"update_invalid", func(c *Client) {
 		wp, err = c.UpdatePackage(&UpdatePackageInput{
 			ServiceID:      *testService.ServiceID,
 			ServiceVersion: *testVersion.Number,
@@ -160,7 +161,7 @@ func TestClient_Package(t *testing.T) {
 	// Update with invalid package bytes
 
 	invalidPackageContent, _ := os.ReadFile("test_assets/package/invalid.tar.gz")
-	recordIgnoreBody(t, fixtureBase+"update_invalid", func(c *Client) {
+	RecordIgnoreBody(t, fixtureBase+"update_invalid", func(c *Client) {
 		wp, err = c.UpdatePackage(&UpdatePackageInput{
 			ServiceID:      *testService.ServiceID,
 			ServiceVersion: *testVersion.Number,
@@ -174,36 +175,36 @@ func TestClient_Package(t *testing.T) {
 
 func TestClient_GetPackage_validation(t *testing.T) {
 	var err error
-	_, err = testClient.GetPackage(&GetPackageInput{
+	_, err = TestClient.GetPackage(&GetPackageInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetPackage(&GetPackageInput{
+	_, err = TestClient.GetPackage(&GetPackageInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_UpdatePackage_validation(t *testing.T) {
 	var err error
-	_, err = testClient.UpdatePackage(&UpdatePackageInput{
+	_, err = TestClient.UpdatePackage(&UpdatePackageInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdatePackage(&UpdatePackageInput{
+	_, err = TestClient.UpdatePackage(&UpdatePackageInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

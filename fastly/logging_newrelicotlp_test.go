@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -9,15 +10,15 @@ func TestClient_NewRelicOTLP(t *testing.T) {
 
 	var err error
 	var tv *Version
-	record(t, "newrelicotlp/version", func(c *Client) {
+	Record(t, "newrelicotlp/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
 	// Create
 	var n *NewRelicOTLP
-	record(t, "newrelicotlp/create", func(c *Client) {
+	Record(t, "newrelicotlp/create", func(c *Client) {
 		n, err = c.CreateNewRelicOTLP(&CreateNewRelicOTLPInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           ToPointer("test-newrelicotlp"),
 			Token:          ToPointer("abcd1234"),
@@ -32,15 +33,15 @@ func TestClient_NewRelicOTLP(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, "newrelicotlp/delete", func(c *Client) {
+		Record(t, "newrelicotlp/delete", func(c *Client) {
 			_ = c.DeleteNewRelicOTLP(&DeleteNewRelicOTLPInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-newrelicotlp",
 			})
 
 			_ = c.DeleteNewRelicOTLP(&DeleteNewRelicOTLPInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "new-test-newrelicotlp",
 			})
@@ -68,9 +69,9 @@ func TestClient_NewRelicOTLP(t *testing.T) {
 
 	// List
 	var ln []*NewRelicOTLP
-	record(t, "newrelicotlp/list", func(c *Client) {
+	Record(t, "newrelicotlp/list", func(c *Client) {
 		ln, err = c.ListNewRelicOTLP(&ListNewRelicOTLPInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -83,9 +84,9 @@ func TestClient_NewRelicOTLP(t *testing.T) {
 
 	// Get
 	var nn *NewRelicOTLP
-	record(t, "newrelicotlp/get", func(c *Client) {
+	Record(t, "newrelicotlp/get", func(c *Client) {
 		nn, err = c.GetNewRelicOTLP(&GetNewRelicOTLPInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-newrelicotlp",
 		})
@@ -114,9 +115,9 @@ func TestClient_NewRelicOTLP(t *testing.T) {
 
 	// Update
 	var un *NewRelicOTLP
-	record(t, "newrelicotlp/update", func(c *Client) {
+	Record(t, "newrelicotlp/update", func(c *Client) {
 		un, err = c.UpdateNewRelicOTLP(&UpdateNewRelicOTLPInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-newrelicotlp",
 			NewName:        ToPointer("new-test-newrelicotlp"),
@@ -134,9 +135,9 @@ func TestClient_NewRelicOTLP(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "newrelicotlp/delete", func(c *Client) {
+	Record(t, "newrelicotlp/delete", func(c *Client) {
 		err = c.DeleteNewRelicOTLP(&DeleteNewRelicOTLPInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "new-test-newrelicotlp",
 		})
@@ -148,117 +149,117 @@ func TestClient_NewRelicOTLP(t *testing.T) {
 
 func TestClient_ListNewRelicOTLP_validation(t *testing.T) {
 	var err error
-	_, err = testClient.ListNewRelicOTLP(&ListNewRelicOTLPInput{
+	_, err = TestClient.ListNewRelicOTLP(&ListNewRelicOTLPInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.ListNewRelicOTLP(&ListNewRelicOTLPInput{
+	_, err = TestClient.ListNewRelicOTLP(&ListNewRelicOTLPInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_CreateNewRelicOTLP_validation(t *testing.T) {
 	var err error
-	_, err = testClient.CreateNewRelicOTLP(&CreateNewRelicOTLPInput{
+	_, err = TestClient.CreateNewRelicOTLP(&CreateNewRelicOTLPInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateNewRelicOTLP(&CreateNewRelicOTLPInput{
+	_, err = TestClient.CreateNewRelicOTLP(&CreateNewRelicOTLPInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_GetNewRelicOTLP_validation(t *testing.T) {
 	var err error
-	_, err = testClient.GetNewRelicOTLP(&GetNewRelicOTLPInput{
+	_, err = TestClient.GetNewRelicOTLP(&GetNewRelicOTLPInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetNewRelicOTLP(&GetNewRelicOTLPInput{
+	_, err = TestClient.GetNewRelicOTLP(&GetNewRelicOTLPInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetNewRelicOTLP(&GetNewRelicOTLPInput{
+	_, err = TestClient.GetNewRelicOTLP(&GetNewRelicOTLPInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 		Name:           "",
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_UpdateNewRelicOTLP_validation(t *testing.T) {
 	var err error
-	_, err = testClient.UpdateNewRelicOTLP(&UpdateNewRelicOTLPInput{
+	_, err = TestClient.UpdateNewRelicOTLP(&UpdateNewRelicOTLPInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateNewRelicOTLP(&UpdateNewRelicOTLPInput{
+	_, err = TestClient.UpdateNewRelicOTLP(&UpdateNewRelicOTLPInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateNewRelicOTLP(&UpdateNewRelicOTLPInput{
+	_, err = TestClient.UpdateNewRelicOTLP(&UpdateNewRelicOTLPInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 		Name:           "",
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_DeleteNewRelicOTLP_validation(t *testing.T) {
 	var err error
-	err = testClient.DeleteNewRelicOTLP(&DeleteNewRelicOTLPInput{
+	err = TestClient.DeleteNewRelicOTLP(&DeleteNewRelicOTLPInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteNewRelicOTLP(&DeleteNewRelicOTLPInput{
+	err = TestClient.DeleteNewRelicOTLP(&DeleteNewRelicOTLPInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteNewRelicOTLP(&DeleteNewRelicOTLPInput{
+	err = TestClient.DeleteNewRelicOTLP(&DeleteNewRelicOTLPInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 		Name:           "",
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 }

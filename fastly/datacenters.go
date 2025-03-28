@@ -2,10 +2,10 @@ package fastly
 
 // Coordinates represent the location of a datacenter.
 type Coordinates struct {
-	Latitude   *float64 `mapstructure:"latitude"`
-	Longtitude *float64 `mapstructure:"longitude"`
-	X          *float64 `mapstructure:"x"`
-	Y          *float64 `mapstructure:"y"`
+	Latitude  *float64 `mapstructure:"latitude"`
+	Longitude *float64 `mapstructure:"longitude"`
+	X         *float64 `mapstructure:"x"`
+	Y         *float64 `mapstructure:"y"`
 }
 
 // Datacenter is a list of Datacenters returned by the Fastly API.
@@ -26,7 +26,7 @@ func (c *Client) AllDatacenters() (datacenters []Datacenter, err error) {
 	defer resp.Body.Close()
 
 	var m []Datacenter
-	if err := decodeBodyMap(resp.Body, &m); err != nil {
+	if err := DecodeBodyMap(resp.Body, &m); err != nil {
 		return nil, err
 	}
 

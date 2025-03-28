@@ -62,7 +62,7 @@ const UserAgentEnvVar = "FASTLY_USER_AGENT"
 var ProjectURL = "github.com/fastly/go-fastly"
 
 // ProjectVersion is the version of this library.
-var ProjectVersion = "9.11.0"
+var ProjectVersion = "9.13.1"
 
 // UserAgent is the user agent for this particular client.
 var UserAgent = fmt.Sprintf("FastlyGo/%s (+%s; %s)",
@@ -207,7 +207,21 @@ func (c *Client) Get(p string, ro *RequestOptions) (*http.Response, error) {
 		ro = new(RequestOptions)
 	}
 	ro.Parallel = true
-	return c.Request("GET", p, ro)
+	return c.Request(http.MethodGet, p, ro)
+}
+
+// GetJSON issues an HTTP GET request and indicates that the response
+// should be JSON encoded.
+func (c *Client) GetJSON(p string, ro *RequestOptions) (*http.Response, error) {
+	if ro == nil {
+		ro = new(RequestOptions)
+	}
+	if ro.Headers == nil {
+		ro.Headers = make(map[string]string)
+	}
+	ro.Parallel = true
+	ro.Headers["Accept"] = JSONMimeType
+	return c.Request(http.MethodGet, p, ro)
 }
 
 // Head issues an HTTP HEAD request.
@@ -216,97 +230,97 @@ func (c *Client) Head(p string, ro *RequestOptions) (*http.Response, error) {
 		ro = new(RequestOptions)
 	}
 	ro.Parallel = true
-	return c.Request("HEAD", p, ro)
+	return c.Request(http.MethodHead, p, ro)
 }
 
 // Patch issues an HTTP PATCH request.
 func (c *Client) Patch(p string, ro *RequestOptions) (*http.Response, error) {
-	return c.Request("PATCH", p, ro)
+	return c.Request(http.MethodPatch, p, ro)
 }
 
 // PatchForm issues an HTTP PUT request with the given interface form-encoded.
 func (c *Client) PatchForm(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestForm("PATCH", p, i, ro)
+	return c.RequestForm(http.MethodPatch, p, i, ro)
 }
 
 // PatchJSON issues an HTTP PUT request with the given interface json-encoded.
 func (c *Client) PatchJSON(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestJSON("PATCH", p, i, ro)
+	return c.RequestJSON(http.MethodPatch, p, i, ro)
 }
 
 // PatchJSONAPI issues an HTTP PUT request with the given interface json-encoded.
 func (c *Client) PatchJSONAPI(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestJSONAPI("PATCH", p, i, ro)
+	return c.RequestJSONAPI(http.MethodPatch, p, i, ro)
 }
 
 // Post issues an HTTP POST request.
 func (c *Client) Post(p string, ro *RequestOptions) (*http.Response, error) {
-	return c.Request("POST", p, ro)
+	return c.Request(http.MethodPost, p, ro)
 }
 
 // PostForm issues an HTTP POST request with the given interface form-encoded.
 func (c *Client) PostForm(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestForm("POST", p, i, ro)
+	return c.RequestForm(http.MethodPost, p, i, ro)
 }
 
 // PostJSON issues an HTTP POST request with the given interface json-encoded.
 func (c *Client) PostJSON(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestJSON("POST", p, i, ro)
+	return c.RequestJSON(http.MethodPost, p, i, ro)
 }
 
 // PostJSONAPI issues an HTTP POST request with the given interface json-encoded.
 func (c *Client) PostJSONAPI(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestJSONAPI("POST", p, i, ro)
+	return c.RequestJSONAPI(http.MethodPost, p, i, ro)
 }
 
 // PostJSONAPIBulk issues an HTTP POST request with the given interface json-encoded and bulk requests.
 func (c *Client) PostJSONAPIBulk(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestJSONAPIBulk("POST", p, i, ro)
+	return c.RequestJSONAPIBulk(http.MethodPost, p, i, ro)
 }
 
 // Put issues an HTTP PUT request.
 func (c *Client) Put(p string, ro *RequestOptions) (*http.Response, error) {
-	return c.Request("PUT", p, ro)
+	return c.Request(http.MethodPut, p, ro)
 }
 
 // PutForm issues an HTTP PUT request with the given interface form-encoded.
 func (c *Client) PutForm(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestForm("PUT", p, i, ro)
+	return c.RequestForm(http.MethodPut, p, i, ro)
 }
 
 // PutFormFile issues an HTTP PUT request (multipart/form-encoded) to put a file to an endpoint.
 func (c *Client) PutFormFile(urlPath, filePath, fieldName string, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestFormFile("PUT", urlPath, filePath, fieldName, ro)
+	return c.RequestFormFile(http.MethodPut, urlPath, filePath, fieldName, ro)
 }
 
 // PutFormFileFromReader issues an HTTP PUT request (multipart/form-encoded) to put a file to an endpoint.
 func (c *Client) PutFormFileFromReader(urlPath, fileName string, fileBytes io.Reader, fieldName string, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestFormFileFromReader("PUT", urlPath, fileName, fileBytes, fieldName, ro)
+	return c.RequestFormFileFromReader(http.MethodPut, urlPath, fileName, fileBytes, fieldName, ro)
 }
 
 // PutJSON issues an HTTP PUT request with the given interface json-encoded.
 func (c *Client) PutJSON(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestJSON("PUT", p, i, ro)
+	return c.RequestJSON(http.MethodPut, p, i, ro)
 }
 
 // PutJSONAPI issues an HTTP PUT request with the given interface json-encoded.
 func (c *Client) PutJSONAPI(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestJSONAPI("PUT", p, i, ro)
+	return c.RequestJSONAPI(http.MethodPut, p, i, ro)
 }
 
 // Delete issues an HTTP DELETE request.
 func (c *Client) Delete(p string, ro *RequestOptions) (*http.Response, error) {
-	return c.Request("DELETE", p, ro)
+	return c.Request(http.MethodDelete, p, ro)
 }
 
 // DeleteJSONAPI issues an HTTP DELETE request with the given interface json-encoded.
 func (c *Client) DeleteJSONAPI(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestJSONAPI("DELETE", p, i, ro)
+	return c.RequestJSONAPI(http.MethodDelete, p, i, ro)
 }
 
 // DeleteJSONAPIBulk issues an HTTP DELETE request with the given interface json-encoded and bulk requests.
 func (c *Client) DeleteJSONAPIBulk(p string, i any, ro *RequestOptions) (*http.Response, error) {
-	return c.RequestJSONAPIBulk("DELETE", p, i, ro)
+	return c.RequestJSONAPIBulk(http.MethodDelete, p, i, ro)
 }
 
 // Request makes an HTTP request against the HTTPClient using the given verb,
@@ -322,10 +336,34 @@ func (c *Client) Request(verb, p string, ro *RequestOptions) (*http.Response, er
 		defer c.updateLock.Unlock()
 	}
 
+	// if a context is provided, set the context on the request
+	if ro != nil && ro.Context != nil {
+		req = req.WithContext(ro.Context)
+	}
+
 	if c.DebugMode {
-		r := req.Clone(context.Background())
-		r.Header.Del("Fastly-Key")
+		var r *http.Request
+		if ro != nil && ro.Context != nil {
+			r = req.Clone(ro.Context)
+		} else {
+			r = req.Clone(context.Background())
+		}
+		// 'r' and 'req' both have a reference to a Body that
+		// is an io.Reader, but only one of them can read its
+		// contents since io.Reader is not seekable and cannot
+		// be rewound
+
+		r.Header.Del(APIKeyHeader)
 		dump, _ := httputil.DumpRequest(r, true)
+
+		// httputil.DumpRequest has read the Body from 'r',
+		// and set r.Body to an io.ReadCloser that will return
+		// the same bytes as the original Body, so we can
+		// stuff that into 'req' for when the request is
+		// actually sent; it can't be read in 'r', but the
+		// lifetime of 'r' ends at the end of this block
+		req.Body = r.Body
+
 		fmt.Printf("http.Request (dump): %q\n", dump)
 	}
 
@@ -341,7 +379,7 @@ func (c *Client) Request(verb, p string, ro *RequestOptions) (*http.Response, er
 		return resp, err
 	}
 
-	if verb != "GET" && verb != "HEAD" {
+	if verb != http.MethodGet && verb != http.MethodHead {
 		remaining := resp.Header.Get("Fastly-RateLimit-Remaining")
 		if remaining != "" {
 			if val, err := strconv.Atoi(remaining); err == nil {
@@ -378,6 +416,8 @@ type RequestOptions struct {
 	Parallel bool
 	// Params is a map of key-value pairs that will be added to the Request.
 	Params map[string]string
+	// Context is a context.Context object that will be set to the Request's context.
+	Context context.Context
 }
 
 // RawRequest accepts a verb, URL, and RequestOptions struct and returns the
@@ -549,73 +589,71 @@ func (c *Client) RequestFormFileFromReader(verb, urlPath, fileName string, fileB
 	return c.Request(verb, urlPath, ro)
 }
 
-// RequestJSON constructs JSON HTTP request.
-func (c *Client) RequestJSON(verb, p string, i any, ro *RequestOptions) (*http.Response, error) {
+// setHeaders ensures that RequestOptions has headers set and applies the given content type and accept headers.
+func setHeaders(ro *RequestOptions, contentType, accept string) *RequestOptions {
 	if ro == nil {
 		ro = new(RequestOptions)
 	}
-
 	if ro.Headers == nil {
 		ro.Headers = make(map[string]string)
 	}
-	ro.Headers["Content-Type"] = JSONMimeType
-	ro.Headers["Accept"] = JSONMimeType
+	ro.Headers["Content-Type"] = contentType
+	ro.Headers["Accept"] = accept
+	return ro
+}
 
+// marshalBodyJSON marshals the input into JSON format and sets it in RequestOptions.
+func marshalBodyJSON(i any, ro *RequestOptions) error {
+	if i == nil {
+		return nil
+	}
 	body, err := json.Marshal(i)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
 	ro.Body = bytes.NewReader(body)
 	ro.BodyLength = int64(len(body))
-
-	return c.Request(verb, p, ro)
+	return nil
 }
 
-// RequestJSONAPI constructs JSON API HTTP request.
-func (c *Client) RequestJSONAPI(verb, p string, i any, ro *RequestOptions) (*http.Response, error) {
-	if ro == nil {
-		ro = new(RequestOptions)
+// marshalBodyJSONAPI marshals the input into JSON API format and sets it in RequestOptions.
+func marshalBodyJSONAPI(i any, ro *RequestOptions) error {
+	if i == nil {
+		return nil
 	}
-
-	if ro.Headers == nil {
-		ro.Headers = make(map[string]string)
-	}
-	ro.Headers["Content-Type"] = jsonapi.MediaType
-	ro.Headers["Accept"] = jsonapi.MediaType
-
-	if i != nil {
-		var buf bytes.Buffer
-		if err := jsonapi.MarshalPayload(&buf, i); err != nil {
-			return nil, err
-		}
-
-		ro.Body = &buf
-		ro.BodyLength = int64(buf.Len())
-	}
-	return c.Request(verb, p, ro)
-}
-
-// RequestJSONAPIBulk constructs bulk JSON API HTTP request.
-func (c *Client) RequestJSONAPIBulk(verb, p string, i any, ro *RequestOptions) (*http.Response, error) {
-	if ro == nil {
-		ro = new(RequestOptions)
-	}
-
-	if ro.Headers == nil {
-		ro.Headers = make(map[string]string)
-	}
-	ro.Headers["Content-Type"] = jsonapi.MediaType + "; ext=bulk"
-	ro.Headers["Accept"] = jsonapi.MediaType + "; ext=bulk"
-
 	var buf bytes.Buffer
 	if err := jsonapi.MarshalPayload(&buf, i); err != nil {
-		return nil, err
+		return err
 	}
-
 	ro.Body = &buf
 	ro.BodyLength = int64(buf.Len())
+	return nil
+}
 
+// RequestJSON constructs a JSON HTTP request.
+func (c *Client) RequestJSON(verb, p string, i any, ro *RequestOptions) (*http.Response, error) {
+	ro = setHeaders(ro, JSONMimeType, JSONMimeType)
+	if err := marshalBodyJSON(i, ro); err != nil {
+		return nil, err
+	}
+	return c.Request(verb, p, ro)
+}
+
+// RequestJSONAPI constructs a JSON API HTTP request.
+func (c *Client) RequestJSONAPI(verb, p string, i any, ro *RequestOptions) (*http.Response, error) {
+	ro = setHeaders(ro, jsonapi.MediaType, jsonapi.MediaType)
+	if err := marshalBodyJSONAPI(i, ro); err != nil {
+		return nil, err
+	}
+	return c.Request(verb, p, ro)
+}
+
+// RequestJSONAPIBulk constructs a bulk JSON API HTTP request.
+func (c *Client) RequestJSONAPIBulk(verb, p string, i any, ro *RequestOptions) (*http.Response, error) {
+	ro = setHeaders(ro, jsonapi.MediaType+"; ext=bulk", jsonapi.MediaType+"; ext=bulk")
+	if err := marshalBodyJSONAPI(i, ro); err != nil {
+		return nil, err
+	}
 	return c.Request(verb, p, ro)
 }
 
@@ -637,8 +675,8 @@ func checkResp(resp *http.Response, err error) (*http.Response, error) {
 	}
 }
 
-// decodeBodyMap is used to decode an HTTP response body into a mapstructure struct.
-func decodeBodyMap(body io.Reader, out any) error {
+// DecodeBodyMap is used to decode an HTTP response body into a mapstructure struct.
+func DecodeBodyMap(body io.Reader, out any) error {
 	var parsed any
 	dec := json.NewDecoder(body)
 	if err := dec.Decode(&parsed); err != nil {
@@ -674,10 +712,8 @@ func mapToHTTPHeaderHookFunc() mapstructure.DecodeHookFunc {
 		t reflect.Type,
 		data any,
 	) (any, error) {
-		if f.Kind() != reflect.Map {
-			return data, nil
-		}
-		if t != reflect.TypeOf(new(http.Header)) {
+		// Ensure source is a map and target is http.Header
+		if f.Kind() != reflect.Map || t != reflect.TypeOf(new(http.Header)) {
 			return data, nil
 		}
 
@@ -714,20 +750,28 @@ func stringToTimeHookFunc() mapstructure.DecodeHookFunc {
 		t reflect.Type,
 		data any,
 	) (any, error) {
-		if f.Kind() != reflect.String {
-			return data, nil
-		}
-		if t != reflect.TypeOf(time.Now()) {
+		// Ensure the source is a string and the target is time.Time
+		if f.Kind() != reflect.String || t != reflect.TypeOf(time.Time{}) {
 			return data, nil
 		}
 
-		// Convert it by parsing
-		v, err := time.Parse(time.RFC3339, data.(string))
-		if err != nil {
-			// DictionaryInfo#get uses it's own special time format for now.
-			v, _ := data.(string) // type assert to avoid runtime panic (v will have zero value for its type)
-			return time.Parse("2006-01-02 15:04:05", v)
+		// Fallback to time.Time zero value for empty string
+		str, _ := data.(string) // Safe type assertion; guaranteed by f.Kind()
+		if str == "" {
+			return time.Time{}, nil
 		}
-		return v, err
+
+		// Attempt parsing in RFC3339 format
+		if v, err := time.Parse(time.RFC3339, str); err == nil {
+			return v, nil
+		}
+
+		// Fallback to "2006-01-02 15:04:05" format
+		if v, err := time.Parse("2006-01-02 15:04:05", str); err == nil {
+			// DictionaryInfo#get uses it's own special time format for now.
+			return v, nil
+		}
+
+		return nil, fmt.Errorf("unable to parse time string: %q", str)
 	}
 }

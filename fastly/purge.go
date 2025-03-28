@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"net/http"
 	"net/url"
 	"strings"
 )
@@ -50,7 +51,7 @@ func (c *Client) Purge(i *PurgeInput) (*Purge, error) {
 	defer resp.Body.Close()
 
 	var r *Purge
-	if err := decodeBodyMap(resp.Body, &r); err != nil {
+	if err := DecodeBodyMap(resp.Body, &r); err != nil {
 		return nil, err
 	}
 	return r, nil
@@ -97,7 +98,7 @@ func (c *Client) PurgeKey(i *PurgeKeyInput) (*Purge, error) {
 
 	ro := new(RequestOptions)
 	ro.Parallel = true
-	req, err := c.RawRequest("POST", path, ro)
+	req, err := c.RawRequest(http.MethodPost, path, ro)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +114,7 @@ func (c *Client) PurgeKey(i *PurgeKeyInput) (*Purge, error) {
 	defer resp.Body.Close()
 
 	var r *Purge
-	if err := decodeBodyMap(resp.Body, &r); err != nil {
+	if err := DecodeBodyMap(resp.Body, &r); err != nil {
 		return nil, err
 	}
 	return r, nil
@@ -142,7 +143,7 @@ func (c *Client) PurgeKeys(i *PurgeKeysInput) (map[string]string, error) {
 
 	ro := new(RequestOptions)
 	ro.Parallel = true
-	req, err := c.RawRequest("POST", path, ro)
+	req, err := c.RawRequest(http.MethodPost, path, ro)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +161,7 @@ func (c *Client) PurgeKeys(i *PurgeKeysInput) (map[string]string, error) {
 	defer resp.Body.Close()
 
 	var r map[string]string
-	if err := decodeBodyMap(resp.Body, &r); err != nil {
+	if err := DecodeBodyMap(resp.Body, &r); err != nil {
 		return nil, err
 	}
 	return r, nil
@@ -180,7 +181,7 @@ func (c *Client) PurgeAll(i *PurgeAllInput) (*Purge, error) {
 
 	path := ToSafeURL("service", i.ServiceID, "purge_all")
 
-	req, err := c.RawRequest("POST", path, nil)
+	req, err := c.RawRequest(http.MethodPost, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +193,7 @@ func (c *Client) PurgeAll(i *PurgeAllInput) (*Purge, error) {
 	defer resp.Body.Close()
 
 	var r *Purge
-	if err := decodeBodyMap(resp.Body, &r); err != nil {
+	if err := DecodeBodyMap(resp.Body, &r); err != nil {
 		return nil, err
 	}
 	return r, nil

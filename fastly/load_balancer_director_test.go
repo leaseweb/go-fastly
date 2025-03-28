@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -8,7 +9,7 @@ func TestClient_Directors(t *testing.T) {
 	t.Parallel()
 
 	var tv *Version
-	record(t, "directors/version", func(c *Client) {
+	Record(t, "directors/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
@@ -20,9 +21,9 @@ func TestClient_Directors(t *testing.T) {
 		errDirector        error
 		errDirectorBackend error
 	)
-	record(t, "directors/create", func(c *Client) {
+	Record(t, "directors/create", func(c *Client) {
 		b, errBackend = c.CreateBackend(&CreateBackendInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           ToPointer("test-backend"),
 			Address:        ToPointer("integ-test.go-fastly.com"),
@@ -32,7 +33,7 @@ func TestClient_Directors(t *testing.T) {
 			SSLCiphers:     ToPointer("DHE-RSA-AES256-SHA:DHE-RSA-CAMELLIA256-SHA:AES256-GCM-SHA384"),
 		})
 		d, errDirector = c.CreateDirector(&CreateDirectorInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           ToPointer("test-director"),
 			Quorum:         ToPointer(50),
@@ -40,7 +41,7 @@ func TestClient_Directors(t *testing.T) {
 			Retries:        ToPointer(5),
 		})
 		_, errDirectorBackend = c.CreateDirectorBackend(&CreateDirectorBackendInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Director:       "test-director",
 			Backend:        *b.Name,
@@ -58,28 +59,28 @@ func TestClient_Directors(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, "directors/cleanup", func(c *Client) {
+		Record(t, "directors/cleanup", func(c *Client) {
 			_ = c.DeleteDirectorBackend(&DeleteDirectorBackendInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Director:       *d.Name,
 				Backend:        *b.Name,
 			})
 
 			_ = c.DeleteBackend(&DeleteBackendInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           *b.Name,
 			})
 
 			_ = c.DeleteDirector(&DeleteDirectorInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-director",
 			})
 
 			_ = c.DeleteDirector(&DeleteDirectorInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "new-test-director",
 			})
@@ -104,9 +105,9 @@ func TestClient_Directors(t *testing.T) {
 		bs  []*Director
 		err error
 	)
-	record(t, "directors/list", func(c *Client) {
+	Record(t, "directors/list", func(c *Client) {
 		bs, err = c.ListDirectors(&ListDirectorsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -119,9 +120,9 @@ func TestClient_Directors(t *testing.T) {
 
 	// Get
 	var nb *Director
-	record(t, "directors/get", func(c *Client) {
+	Record(t, "directors/get", func(c *Client) {
 		nb, err = c.GetDirector(&GetDirectorInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-director",
 		})
@@ -147,9 +148,9 @@ func TestClient_Directors(t *testing.T) {
 
 	// Update
 	var ub *Director
-	record(t, "directors/update", func(c *Client) {
+	Record(t, "directors/update", func(c *Client) {
 		ub, err = c.UpdateDirector(&UpdateDirectorInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-director",
 			NewName:        ToPointer("new-test-director"),
@@ -164,9 +165,9 @@ func TestClient_Directors(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "directors/delete", func(c *Client) {
+	Record(t, "directors/delete", func(c *Client) {
 		err = c.DeleteDirector(&DeleteDirectorInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-director",
 		})
@@ -178,36 +179,36 @@ func TestClient_Directors(t *testing.T) {
 
 func TestClient_ListDirectors_validation(t *testing.T) {
 	var err error
-	_, err = testClient.ListDirectors(&ListDirectorsInput{
+	_, err = TestClient.ListDirectors(&ListDirectorsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.ListDirectors(&ListDirectorsInput{
+	_, err = TestClient.ListDirectors(&ListDirectorsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_CreateDirector_validation(t *testing.T) {
 	var err error
-	_, err = testClient.CreateDirector(&CreateDirectorInput{
+	_, err = TestClient.CreateDirector(&CreateDirectorInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateDirector(&CreateDirectorInput{
+	_, err = TestClient.CreateDirector(&CreateDirectorInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -215,27 +216,27 @@ func TestClient_CreateDirector_validation(t *testing.T) {
 func TestClient_GetDirector_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.GetDirector(&GetDirectorInput{
+	_, err = TestClient.GetDirector(&GetDirectorInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetDirector(&GetDirectorInput{
+	_, err = TestClient.GetDirector(&GetDirectorInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetDirector(&GetDirectorInput{
+	_, err = TestClient.GetDirector(&GetDirectorInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -243,27 +244,27 @@ func TestClient_GetDirector_validation(t *testing.T) {
 func TestClient_UpdateDirector_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.UpdateDirector(&UpdateDirectorInput{
+	_, err = TestClient.UpdateDirector(&UpdateDirectorInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateDirector(&UpdateDirectorInput{
+	_, err = TestClient.UpdateDirector(&UpdateDirectorInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateDirector(&UpdateDirectorInput{
+	_, err = TestClient.UpdateDirector(&UpdateDirectorInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -271,27 +272,27 @@ func TestClient_UpdateDirector_validation(t *testing.T) {
 func TestClient_DeleteDirector_validation(t *testing.T) {
 	var err error
 
-	err = testClient.DeleteDirector(&DeleteDirectorInput{
+	err = TestClient.DeleteDirector(&DeleteDirectorInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteDirector(&DeleteDirectorInput{
+	err = TestClient.DeleteDirector(&DeleteDirectorInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteDirector(&DeleteDirectorInput{
+	err = TestClient.DeleteDirector(&DeleteDirectorInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

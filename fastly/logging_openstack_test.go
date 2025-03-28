@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -9,15 +10,15 @@ func TestClient_Openstack(t *testing.T) {
 
 	var err error
 	var tv *Version
-	record(t, "openstack/version", func(c *Client) {
+	Record(t, "openstack/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
 	// Create
 	var osCreateResp1, osCreateResp2, osCreateResp3 *Openstack
-	record(t, "openstack/create", func(c *Client) {
+	Record(t, "openstack/create", func(c *Client) {
 		osCreateResp1, err = c.CreateOpenstack(&CreateOpenstackInput{
-			ServiceID:        testServiceID,
+			ServiceID:        TestDeliveryServiceID,
 			ServiceVersion:   *tv.Number,
 			Name:             ToPointer("test-openstack"),
 			User:             ToPointer("user"),
@@ -39,9 +40,9 @@ func TestClient_Openstack(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record(t, "openstack/create2", func(c *Client) {
+	Record(t, "openstack/create2", func(c *Client) {
 		osCreateResp2, err = c.CreateOpenstack(&CreateOpenstackInput{
-			ServiceID:       testServiceID,
+			ServiceID:       TestDeliveryServiceID,
 			ServiceVersion:  *tv.Number,
 			Name:            ToPointer("test-openstack-2"),
 			User:            ToPointer("user"),
@@ -63,9 +64,9 @@ func TestClient_Openstack(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record(t, "openstack/create3", func(c *Client) {
+	Record(t, "openstack/create3", func(c *Client) {
 		osCreateResp3, err = c.CreateOpenstack(&CreateOpenstackInput{
-			ServiceID:        testServiceID,
+			ServiceID:        TestDeliveryServiceID,
 			ServiceVersion:   *tv.Number,
 			Name:             ToPointer("test-openstack-3"),
 			User:             ToPointer("user"),
@@ -89,9 +90,9 @@ func TestClient_Openstack(t *testing.T) {
 
 	// This case is expected to fail because both CompressionCodec and
 	// GzipLevel are present.
-	record(t, "openstack/create4", func(c *Client) {
+	Record(t, "openstack/create4", func(c *Client) {
 		_, err = c.CreateOpenstack(&CreateOpenstackInput{
-			ServiceID:        testServiceID,
+			ServiceID:        TestDeliveryServiceID,
 			ServiceVersion:   *tv.Number,
 			Name:             ToPointer("test-openstack-4"),
 			User:             ToPointer("user"),
@@ -116,27 +117,27 @@ func TestClient_Openstack(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, "openstack/cleanup", func(c *Client) {
+		Record(t, "openstack/cleanup", func(c *Client) {
 			_ = c.DeleteOpenstack(&DeleteOpenstackInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-openstack",
 			})
 
 			_ = c.DeleteOpenstack(&DeleteOpenstackInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-openstack-2",
 			})
 
 			_ = c.DeleteOpenstack(&DeleteOpenstackInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-openstack-3",
 			})
 
 			_ = c.DeleteOpenstack(&DeleteOpenstackInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "new-test-openstack",
 			})
@@ -203,9 +204,9 @@ func TestClient_Openstack(t *testing.T) {
 
 	// List
 	var lc []*Openstack
-	record(t, "openstack/list", func(c *Client) {
+	Record(t, "openstack/list", func(c *Client) {
 		lc, err = c.ListOpenstack(&ListOpenstackInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -218,9 +219,9 @@ func TestClient_Openstack(t *testing.T) {
 
 	// Get
 	var osGetResp *Openstack
-	record(t, "openstack/get", func(c *Client) {
+	Record(t, "openstack/get", func(c *Client) {
 		osGetResp, err = c.GetOpenstack(&GetOpenstackInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-openstack",
 		})
@@ -276,9 +277,9 @@ func TestClient_Openstack(t *testing.T) {
 
 	// Update
 	var osUpdateResp1, osUpdateResp2, osUpdateResp3 *Openstack
-	record(t, "openstack/update", func(c *Client) {
+	Record(t, "openstack/update", func(c *Client) {
 		osUpdateResp1, err = c.UpdateOpenstack(&UpdateOpenstackInput{
-			ServiceID:        testServiceID,
+			ServiceID:        TestDeliveryServiceID,
 			ServiceVersion:   *tv.Number,
 			Name:             "test-openstack",
 			User:             ToPointer("new-user"),
@@ -290,9 +291,9 @@ func TestClient_Openstack(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record(t, "openstack/update2", func(c *Client) {
+	Record(t, "openstack/update2", func(c *Client) {
 		osUpdateResp2, err = c.UpdateOpenstack(&UpdateOpenstackInput{
-			ServiceID:        testServiceID,
+			ServiceID:        TestDeliveryServiceID,
 			ServiceVersion:   *tv.Number,
 			Name:             "test-openstack-2",
 			CompressionCodec: ToPointer("zstd"),
@@ -302,9 +303,9 @@ func TestClient_Openstack(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record(t, "openstack/update3", func(c *Client) {
+	Record(t, "openstack/update3", func(c *Client) {
 		osUpdateResp3, err = c.UpdateOpenstack(&UpdateOpenstackInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-openstack-3",
 			GzipLevel:      ToPointer(9),
@@ -340,9 +341,9 @@ func TestClient_Openstack(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "openstack/delete", func(c *Client) {
+	Record(t, "openstack/delete", func(c *Client) {
 		err = c.DeleteOpenstack(&DeleteOpenstackInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "new-test-openstack",
 		})
@@ -354,36 +355,36 @@ func TestClient_Openstack(t *testing.T) {
 
 func TestClient_ListOpenstack_validation(t *testing.T) {
 	var err error
-	_, err = testClient.ListOpenstack(&ListOpenstackInput{
+	_, err = TestClient.ListOpenstack(&ListOpenstackInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.ListOpenstack(&ListOpenstackInput{
+	_, err = TestClient.ListOpenstack(&ListOpenstackInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_CreateOpenstack_validation(t *testing.T) {
 	var err error
-	_, err = testClient.CreateOpenstack(&CreateOpenstackInput{
+	_, err = TestClient.CreateOpenstack(&CreateOpenstackInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateOpenstack(&CreateOpenstackInput{
+	_, err = TestClient.CreateOpenstack(&CreateOpenstackInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -391,27 +392,27 @@ func TestClient_CreateOpenstack_validation(t *testing.T) {
 func TestClient_GetOpenstack_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.GetOpenstack(&GetOpenstackInput{
+	_, err = TestClient.GetOpenstack(&GetOpenstackInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetOpenstack(&GetOpenstackInput{
+	_, err = TestClient.GetOpenstack(&GetOpenstackInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetOpenstack(&GetOpenstackInput{
+	_, err = TestClient.GetOpenstack(&GetOpenstackInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -419,27 +420,27 @@ func TestClient_GetOpenstack_validation(t *testing.T) {
 func TestClient_UpdateOpenstack_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.UpdateOpenstack(&UpdateOpenstackInput{
+	_, err = TestClient.UpdateOpenstack(&UpdateOpenstackInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateOpenstack(&UpdateOpenstackInput{
+	_, err = TestClient.UpdateOpenstack(&UpdateOpenstackInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateOpenstack(&UpdateOpenstackInput{
+	_, err = TestClient.UpdateOpenstack(&UpdateOpenstackInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -447,27 +448,27 @@ func TestClient_UpdateOpenstack_validation(t *testing.T) {
 func TestClient_DeleteOpenstack_validation(t *testing.T) {
 	var err error
 
-	err = testClient.DeleteOpenstack(&DeleteOpenstackInput{
+	err = TestClient.DeleteOpenstack(&DeleteOpenstackInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteOpenstack(&DeleteOpenstackInput{
+	err = TestClient.DeleteOpenstack(&DeleteOpenstackInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteOpenstack(&DeleteOpenstackInput{
+	err = TestClient.DeleteOpenstack(&DeleteOpenstackInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

@@ -2,8 +2,11 @@ package fastly
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"testing"
+
+	"github.com/google/jsonapi"
 )
 
 func TestClient_APIEvents(t *testing.T) {
@@ -11,7 +14,7 @@ func TestClient_APIEvents(t *testing.T) {
 
 	var err error
 	var events GetAPIEventsResponse
-	record(t, "events/get_events", func(c *Client) {
+	Record(t, "events/get_events", func(c *Client) {
 		events, err = c.GetAPIEvents(&GetAPIEventsFilterInput{
 			PageNumber: 1,
 			MaxResults: 1,
@@ -25,7 +28,7 @@ func TestClient_APIEvents(t *testing.T) {
 	}
 
 	var event *Event
-	record(t, "events/get_event", func(c *Client) {
+	Record(t, "events/get_event", func(c *Client) {
 		event, err = c.GetAPIEvent(&GetAPIEventInput{
 			EventID: events.Events[0].ID,
 		})
@@ -40,10 +43,10 @@ func TestClient_APIEvents(t *testing.T) {
 
 func TestClient_GetAPIEvent_validation(t *testing.T) {
 	var err error
-	_, err = testClient.GetAPIEvent(&GetAPIEventInput{
+	_, err = TestClient.GetAPIEvent(&GetAPIEventInput{
 		EventID: "",
 	})
-	if err != ErrMissingEventID {
+	if !errors.Is(err, ErrMissingEventID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -65,12 +68,12 @@ func TestGetAPIEventsFilterInput_formatFilters(t *testing.T) {
 				PageNumber: 2,
 			},
 			expected: map[string]string{
-				"filter[customer_id]": "65135846153687547",
-				"filter[service_id]":  "5343548168357658",
-				"filter[event_type]":  "version.activate",
-				"filter[user_id]":     "654681384354746951",
-				"page[size]":          "1",
-				"page[number]":        "2",
+				"filter[customer_id]":        "65135846153687547",
+				"filter[service_id]":         "5343548168357658",
+				"filter[event_type]":         "version.activate",
+				"filter[user_id]":            "654681384354746951",
+				jsonapi.QueryParamPageSize:   "1",
+				jsonapi.QueryParamPageNumber: "2",
 			},
 		},
 	}

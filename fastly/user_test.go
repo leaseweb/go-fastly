@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -9,7 +10,7 @@ func TestClient_UsersCurrent(t *testing.T) {
 
 	var err error
 	var u *User
-	record(t, "users/get_current_user", func(c *Client) {
+	Record(t, "users/get_current_user", func(c *Client) {
 		u, err = c.GetCurrentUser()
 	})
 	if err != nil {
@@ -29,7 +30,7 @@ func TestClient_Users(t *testing.T) {
 	// NOTE: When recreating the fixtures, update the login.
 	var err error
 	var u *User
-	record(t, fixtureBase+"create", func(c *Client) {
+	Record(t, fixtureBase+"create", func(c *Client) {
 		u, err = c.CreateUser(&CreateUserInput{
 			Login: ToPointer(login),
 			Name:  ToPointer("test user"),
@@ -42,7 +43,7 @@ func TestClient_Users(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, fixtureBase+"cleanup", func(c *Client) {
+		Record(t, fixtureBase+"cleanup", func(c *Client) {
 			_ = c.DeleteUser(&DeleteUserInput{
 				UserID: *u.UserID,
 			})
@@ -63,7 +64,7 @@ func TestClient_Users(t *testing.T) {
 
 	// List
 	var us []*User
-	record(t, fixtureBase+"list", func(c *Client) {
+	Record(t, fixtureBase+"list", func(c *Client) {
 		us, err = c.ListCustomerUsers(&ListCustomerUsersInput{
 			CustomerID: *u.CustomerID,
 		})
@@ -77,7 +78,7 @@ func TestClient_Users(t *testing.T) {
 
 	// Get
 	var nu *User
-	record(t, fixtureBase+"get", func(c *Client) {
+	Record(t, fixtureBase+"get", func(c *Client) {
 		nu, err = c.GetUser(&GetUserInput{
 			UserID: *u.UserID,
 		})
@@ -91,7 +92,7 @@ func TestClient_Users(t *testing.T) {
 
 	// Update
 	var uu *User
-	record(t, fixtureBase+"update", func(c *Client) {
+	Record(t, fixtureBase+"update", func(c *Client) {
 		uu, err = c.UpdateUser(&UpdateUserInput{
 			UserID: *u.UserID,
 			Name:   ToPointer("updated user"),
@@ -112,7 +113,7 @@ func TestClient_Users(t *testing.T) {
 	//
 	// NOTE: This integration test can fail due to reCAPTCHA.
 	// Which means you might have to manually correct the fixtures 😬
-	record(t, fixtureBase+"reset_password", func(c *Client) {
+	Record(t, fixtureBase+"reset_password", func(c *Client) {
 		err = c.ResetUserPassword(&ResetUserPasswordInput{
 			Login: *uu.Login,
 		})
@@ -122,7 +123,7 @@ func TestClient_Users(t *testing.T) {
 	}
 
 	// Delete
-	record(t, fixtureBase+"delete", func(c *Client) {
+	Record(t, fixtureBase+"delete", func(c *Client) {
 		err = c.DeleteUser(&DeleteUserInput{
 			UserID: *u.UserID,
 		})
@@ -134,48 +135,48 @@ func TestClient_Users(t *testing.T) {
 
 func TestClient_ListCustomerUsers_validation(t *testing.T) {
 	var err error
-	_, err = testClient.ListCustomerUsers(&ListCustomerUsersInput{
+	_, err = TestClient.ListCustomerUsers(&ListCustomerUsersInput{
 		CustomerID: "",
 	})
-	if err != ErrMissingCustomerID {
+	if !errors.Is(err, ErrMissingCustomerID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_GetUser_validation(t *testing.T) {
 	var err error
-	_, err = testClient.GetUser(&GetUserInput{
+	_, err = TestClient.GetUser(&GetUserInput{
 		UserID: "",
 	})
-	if err != ErrMissingUserID {
+	if !errors.Is(err, ErrMissingUserID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_UpdateUser_validation(t *testing.T) {
 	var err error
-	_, err = testClient.UpdateUser(&UpdateUserInput{
+	_, err = TestClient.UpdateUser(&UpdateUserInput{
 		UserID: "",
 	})
-	if err != ErrMissingUserID {
+	if !errors.Is(err, ErrMissingUserID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_DeleteUser_validation(t *testing.T) {
-	err := testClient.DeleteUser(&DeleteUserInput{
+	err := TestClient.DeleteUser(&DeleteUserInput{
 		UserID: "",
 	})
-	if err != ErrMissingUserID {
+	if !errors.Is(err, ErrMissingUserID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_ResetUser_validation(t *testing.T) {
-	err := testClient.ResetUserPassword(&ResetUserPasswordInput{
+	err := TestClient.ResetUserPassword(&ResetUserPasswordInput{
 		Login: "",
 	})
-	if err != ErrMissingLogin {
+	if !errors.Is(err, ErrMissingLogin) {
 		t.Errorf("bad error: %s", err)
 	}
 }

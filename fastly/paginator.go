@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/google/jsonapi"
+
 	"github.com/peterhellberg/link"
 )
 
@@ -117,13 +119,13 @@ func (p *ListPaginator[T]) GetNext() ([]*T, error) {
 
 	for _, l := range link.ParseResponse(resp) {
 		// Indicates the Link response header contained the next page instruction
-		if l.Rel == "next" {
+		if l.Rel == jsonapi.KeyNextPage {
 			u, _ := url.Parse(l.URI)
 			query := u.Query()
 			p.NextPage, _ = strconv.Atoi(query["page"][0])
 		}
 		// Indicates the Link response header contained the last page instruction
-		if l.Rel == "last" {
+		if l.Rel == jsonapi.KeyLastPage {
 			u, _ := url.Parse(l.URI)
 			query := u.Query()
 			p.LastPage, _ = strconv.Atoi(query["page"][0])
@@ -133,7 +135,7 @@ func (p *ListPaginator[T]) GetNext() ([]*T, error) {
 	p.consumed = true
 
 	var s []*T
-	if err := decodeBodyMap(resp.Body, &s); err != nil {
+	if err := DecodeBodyMap(resp.Body, &s); err != nil {
 		return nil, err
 	}
 

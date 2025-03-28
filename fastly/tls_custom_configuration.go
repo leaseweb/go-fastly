@@ -45,22 +45,20 @@ type ListCustomTLSConfigurationsInput struct {
 func (i *ListCustomTLSConfigurationsInput) formatFilters() map[string]string {
 	result := map[string]string{}
 	pairings := map[string]any{
-		"filter[bulk]": i.FilterBulk,
-		"include":      i.Include,
-		"page[size]":   i.PageSize,
-		"page[number]": i.PageNumber,
+		"filter[bulk]":               i.FilterBulk,
+		"include":                    i.Include,
+		jsonapi.QueryParamPageSize:   i.PageSize,
+		jsonapi.QueryParamPageNumber: i.PageNumber,
 	}
 
 	for key, value := range pairings {
-		switch t := reflect.TypeOf(value).String(); t {
-		case "string":
-			if value != "" {
-				v, _ := value.(string) // type assert to avoid runtime panic (v will have zero value for its type)
+		switch v := value.(type) {
+		case string:
+			if v != "" {
 				result[key] = v
 			}
-		case "int":
-			if value != 0 {
-				v, _ := value.(int) // type assert to avoid runtime panic (v will have zero value for its type)
+		case int:
+			if v != 0 {
 				result[key] = strconv.Itoa(v)
 			}
 		}
@@ -75,7 +73,7 @@ func (c *Client) ListCustomTLSConfigurations(i *ListCustomTLSConfigurationsInput
 	ro := &RequestOptions{
 		Params: i.formatFilters(),
 		Headers: map[string]string{
-			"Accept": "application/vnd.api+json", // this is required otherwise the filters don't work
+			"Accept": jsonapi.MediaType, // this is required otherwise the filters don't work
 		},
 	}
 
@@ -120,7 +118,7 @@ func (c *Client) GetCustomTLSConfiguration(i *GetCustomTLSConfigurationInput) (*
 
 	ro := &RequestOptions{
 		Headers: map[string]string{
-			"Accept": "application/vnd.api+json", // this is required otherwise the params don't work
+			"Accept": jsonapi.MediaType, // this is required otherwise the params don't work
 		},
 	}
 

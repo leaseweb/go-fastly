@@ -51,7 +51,7 @@ type Snippet struct {
 	Dynamic        *int         `mapstructure:"dynamic"`
 	SnippetID      *string      `mapstructure:"id"`
 	Name           *string      `mapstructure:"name"`
-	Priority       *int         `mapstructure:"priority"`
+	Priority       *string      `mapstructure:"priority"`
 	ServiceID      *string      `mapstructure:"service_id"`
 	ServiceVersion *int         `mapstructure:"version"`
 	Type           *SnippetType `mapstructure:"type"`
@@ -67,7 +67,7 @@ type CreateSnippetInput struct {
 	// Name is the name for the snippet (required).
 	Name *string `url:"name,omitempty"`
 	// Priority determines the ordering for multiple snippets. Lower numbers execute first.
-	Priority *int `url:"priority,omitempty"`
+	Priority *string `url:"priority,omitempty"`
 	// ServiceID is the ID of the service to add the snippet to (required).
 	ServiceID string `url:"-"`
 	// ServiceVersion is the editable configuration version (required).
@@ -93,7 +93,7 @@ func (c *Client) CreateSnippet(i *CreateSnippetInput) (*Snippet, error) {
 	defer resp.Body.Close()
 
 	var snippet *Snippet
-	if err := decodeBodyMap(resp.Body, &snippet); err != nil {
+	if err := DecodeBodyMap(resp.Body, &snippet); err != nil {
 		return nil, err
 	}
 	return snippet, err
@@ -108,7 +108,7 @@ type UpdateSnippetInput struct {
 	// NewName is the new name for the resource.
 	NewName *string `url:"name,omitempty"`
 	// Priority determines the ordering for multiple snippets. Lower numbers execute first.
-	Priority *int `url:"priority,omitempty"`
+	Priority *string `url:"priority,omitempty"`
 	// ServiceID is the ID of the service to add the snippet to (required).
 	ServiceID string `url:"-"`
 	// ServiceVersion is the editable configuration version (required).
@@ -137,7 +137,7 @@ func (c *Client) UpdateSnippet(i *UpdateSnippetInput) (*Snippet, error) {
 	defer resp.Body.Close()
 
 	var snippet *Snippet
-	if err := decodeBodyMap(resp.Body, &snippet); err != nil {
+	if err := DecodeBodyMap(resp.Body, &snippet); err != nil {
 		return nil, err
 	}
 	return snippet, err
@@ -181,7 +181,7 @@ func (c *Client) UpdateDynamicSnippet(i *UpdateDynamicSnippetInput) (*DynamicSni
 	defer resp.Body.Close()
 
 	var updateSnippet *DynamicSnippet
-	if err := decodeBodyMap(resp.Body, &updateSnippet); err != nil {
+	if err := DecodeBodyMap(resp.Body, &updateSnippet); err != nil {
 		return nil, err
 	}
 	return updateSnippet, err
@@ -217,7 +217,7 @@ func (c *Client) DeleteSnippet(i *DeleteSnippetInput) error {
 	defer resp.Body.Close()
 
 	var r *statusResp
-	if err := decodeBodyMap(resp.Body, &r); err != nil {
+	if err := DecodeBodyMap(resp.Body, &r); err != nil {
 		return err
 	}
 	if !r.Ok() {
@@ -254,7 +254,7 @@ func (c *Client) ListSnippets(i *ListSnippetsInput) ([]*Snippet, error) {
 	defer resp.Body.Close()
 
 	var snippets []*Snippet
-	if err := decodeBodyMap(resp.Body, &snippets); err != nil {
+	if err := DecodeBodyMap(resp.Body, &snippets); err != nil {
 		return nil, err
 	}
 	return snippets, nil
@@ -293,7 +293,7 @@ func (c *Client) GetSnippet(i *GetSnippetInput) (*Snippet, error) {
 	defer resp.Body.Close()
 
 	var snippet *Snippet
-	if err := decodeBodyMap(resp.Body, &snippet); err != nil {
+	if err := DecodeBodyMap(resp.Body, &snippet); err != nil {
 		return nil, err
 	}
 	return snippet, nil
@@ -327,7 +327,7 @@ func (c *Client) GetDynamicSnippet(i *GetDynamicSnippetInput) (*DynamicSnippet, 
 	defer resp.Body.Close()
 
 	var snippet *DynamicSnippet
-	if err := decodeBodyMap(resp.Body, &snippet); err != nil {
+	if err := DecodeBodyMap(resp.Body, &snippet); err != nil {
 		return nil, err
 	}
 	return snippet, nil

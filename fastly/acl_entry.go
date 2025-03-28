@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -122,7 +123,7 @@ func (c *Client) GetACLEntry(i *GetACLEntryInput) (*ACLEntry, error) {
 	defer resp.Body.Close()
 
 	var e *ACLEntry
-	if err := decodeBodyMap(resp.Body, &e); err != nil {
+	if err := DecodeBodyMap(resp.Body, &e); err != nil {
 		return nil, err
 	}
 
@@ -163,7 +164,7 @@ func (c *Client) CreateACLEntry(i *CreateACLEntryInput) (*ACLEntry, error) {
 	defer resp.Body.Close()
 
 	var e *ACLEntry
-	if err := decodeBodyMap(resp.Body, &e); err != nil {
+	if err := DecodeBodyMap(resp.Body, &e); err != nil {
 		return nil, err
 	}
 
@@ -201,7 +202,7 @@ func (c *Client) DeleteACLEntry(i *DeleteACLEntryInput) error {
 	defer resp.Body.Close()
 
 	var r *statusResp
-	if err := decodeBodyMap(resp.Body, &r); err != nil {
+	if err := DecodeBodyMap(resp.Body, &r); err != nil {
 		return err
 	}
 
@@ -244,14 +245,14 @@ func (c *Client) UpdateACLEntry(i *UpdateACLEntryInput) (*ACLEntry, error) {
 
 	path := ToSafeURL("service", i.ServiceID, "acl", i.ACLID, "entry", i.EntryID)
 
-	resp, err := c.RequestForm("PATCH", path, i, nil)
+	resp, err := c.RequestForm(http.MethodPatch, path, i, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var e *ACLEntry
-	if err := decodeBodyMap(resp.Body, &e); err != nil {
+	if err := DecodeBodyMap(resp.Body, &e); err != nil {
 		return nil, err
 	}
 
@@ -307,5 +308,5 @@ func (c *Client) BatchModifyACLEntries(i *BatchModifyACLEntriesInput) error {
 
 	var batchModifyResult map[string]string
 
-	return decodeBodyMap(resp.Body, &batchModifyResult)
+	return DecodeBodyMap(resp.Body, &batchModifyResult)
 }

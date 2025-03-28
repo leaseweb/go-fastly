@@ -174,26 +174,24 @@ func getEventsPages(body io.Reader) (EventsPaginationInfo, io.Reader, error) {
 func (i *GetAPIEventsFilterInput) formatEventFilters() map[string]string {
 	result := map[string]string{}
 	pairings := map[string]any{
-		"filter[customer_id]": i.CustomerID,
-		"filter[service_id]":  i.ServiceID,
-		"filter[event_type]":  i.EventType,
-		"filter[user_id]":     i.UserID,
-		"page[size]":          i.MaxResults,
-		"page[number]":        i.PageNumber, // starts at 1, not 0
+		"filter[customer_id]":        i.CustomerID,
+		"filter[service_id]":         i.ServiceID,
+		"filter[event_type]":         i.EventType,
+		"filter[user_id]":            i.UserID,
+		jsonapi.QueryParamPageSize:   i.MaxResults,
+		jsonapi.QueryParamPageNumber: i.PageNumber, // starts at 1, not 0
 	}
 	// NOTE: This setup means we will not be able to send the zero value
 	// of any of these filters. It doesn't appear we would need to at present.
 
 	for key, value := range pairings {
-		switch t := reflect.TypeOf(value).String(); t {
-		case "string":
-			if value != "" {
-				v, _ := value.(string) // type assert to avoid runtime panic (v will have zero value for its type)
+		switch v := value.(type) {
+		case string:
+			if v != "" {
 				result[key] = v
 			}
-		case "int":
-			if value != 0 {
-				v, _ := value.(int) // type assert to avoid runtime panic (v will have zero value for its type)
+		case int:
+			if v != 0 {
 				result[key] = strconv.Itoa(v)
 			}
 		}

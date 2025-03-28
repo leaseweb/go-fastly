@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -9,15 +10,15 @@ func TestClient_Conditions(t *testing.T) {
 
 	var err error
 	var tv *Version
-	record(t, "conditions/version", func(c *Client) {
+	Record(t, "conditions/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
 	// Create
 	var condition *Condition
-	record(t, "conditions/create", func(c *Client) {
+	Record(t, "conditions/create", func(c *Client) {
 		condition, err = c.CreateCondition(&CreateConditionInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           ToPointer("test/condition"),
 			Statement:      ToPointer("req.url~+\"index.html\""),
@@ -31,9 +32,9 @@ func TestClient_Conditions(t *testing.T) {
 
 	// // Ensure deleted
 	defer func() {
-		record(t, "conditions/cleanup", func(c *Client) {
+		Record(t, "conditions/cleanup", func(c *Client) {
 			_ = c.DeleteCondition(&DeleteConditionInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test/condition",
 			})
@@ -55,9 +56,9 @@ func TestClient_Conditions(t *testing.T) {
 
 	// List
 	var conditions []*Condition
-	record(t, "conditions/list", func(c *Client) {
+	Record(t, "conditions/list", func(c *Client) {
 		conditions, err = c.ListConditions(&ListConditionsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -70,9 +71,9 @@ func TestClient_Conditions(t *testing.T) {
 
 	// Get
 	var newCondition *Condition
-	record(t, "conditions/get", func(c *Client) {
+	Record(t, "conditions/get", func(c *Client) {
 		newCondition, err = c.GetCondition(&GetConditionInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test/condition",
 		})
@@ -95,9 +96,9 @@ func TestClient_Conditions(t *testing.T) {
 
 	// Update
 	var updatedCondition *Condition
-	record(t, "conditions/update", func(c *Client) {
+	Record(t, "conditions/update", func(c *Client) {
 		updatedCondition, err = c.UpdateCondition(&UpdateConditionInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test/condition",
 			Statement:      ToPointer("req.url~+\"updated.html\""),
@@ -111,9 +112,9 @@ func TestClient_Conditions(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "conditions/delete", func(c *Client) {
+	Record(t, "conditions/delete", func(c *Client) {
 		err = c.DeleteCondition(&DeleteConditionInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test/condition",
 		})
@@ -125,36 +126,36 @@ func TestClient_Conditions(t *testing.T) {
 
 func TestClient_ListConditions_validation(t *testing.T) {
 	var err error
-	_, err = testClient.ListConditions(&ListConditionsInput{
+	_, err = TestClient.ListConditions(&ListConditionsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.ListConditions(&ListConditionsInput{
+	_, err = TestClient.ListConditions(&ListConditionsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_CreateCondition_validation(t *testing.T) {
 	var err error
-	_, err = testClient.CreateCondition(&CreateConditionInput{
+	_, err = TestClient.CreateCondition(&CreateConditionInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateCondition(&CreateConditionInput{
+	_, err = TestClient.CreateCondition(&CreateConditionInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -162,27 +163,27 @@ func TestClient_CreateCondition_validation(t *testing.T) {
 func TestClient_GetCondition_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.GetCondition(&GetConditionInput{
+	_, err = TestClient.GetCondition(&GetConditionInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetCondition(&GetConditionInput{
+	_, err = TestClient.GetCondition(&GetConditionInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetCondition(&GetConditionInput{
+	_, err = TestClient.GetCondition(&GetConditionInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -190,27 +191,27 @@ func TestClient_GetCondition_validation(t *testing.T) {
 func TestClient_UpdateCondition_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.UpdateCondition(&UpdateConditionInput{
+	_, err = TestClient.UpdateCondition(&UpdateConditionInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateCondition(&UpdateConditionInput{
+	_, err = TestClient.UpdateCondition(&UpdateConditionInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateCondition(&UpdateConditionInput{
+	_, err = TestClient.UpdateCondition(&UpdateConditionInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -218,27 +219,27 @@ func TestClient_UpdateCondition_validation(t *testing.T) {
 func TestClient_DeleteCondition_validation(t *testing.T) {
 	var err error
 
-	err = testClient.DeleteCondition(&DeleteConditionInput{
+	err = TestClient.DeleteCondition(&DeleteConditionInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteCondition(&DeleteConditionInput{
+	err = TestClient.DeleteCondition(&DeleteConditionInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteCondition(&DeleteConditionInput{
+	err = TestClient.DeleteCondition(&DeleteConditionInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

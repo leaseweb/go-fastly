@@ -1,7 +1,5 @@
 package fastly
 
-import "fmt"
-
 // ProductEnablement represents a response from the Fastly API.
 type ProductEnablement struct {
 	Product *ProductEnablementNested `mapstructure:"product"`
@@ -28,8 +26,8 @@ func (p Product) String() string {
 		return "fanout"
 	case ProductImageOptimizer:
 		return "image_optimizer"
-	case ProductNGWAF:
-		return "ngwaf"
+	case ProductLogExplorerInsights:
+		return "log_explorer_insights"
 	case ProductOriginInspector:
 		return "origin_inspector"
 	case ProductWebSockets:
@@ -47,7 +45,7 @@ const (
 	ProductDomainInspector
 	ProductFanout
 	ProductImageOptimizer
-	ProductNGWAF
+	ProductLogExplorerInsights
 	ProductOriginInspector
 	ProductWebSockets
 )
@@ -61,6 +59,9 @@ type ProductEnablementInput struct {
 }
 
 // GetProduct retrieves the details of the product enabled on the service.
+//
+// Deprecated: The 'Get' functions in the product-specific packages
+// should be used instead of this function.
 func (c *Client) GetProduct(i *ProductEnablementInput) (*ProductEnablement, error) {
 	if i.ProductID == ProductUndefined {
 		return nil, ErrMissingProductID
@@ -69,7 +70,7 @@ func (c *Client) GetProduct(i *ProductEnablementInput) (*ProductEnablement, erro
 		return nil, ErrMissingServiceID
 	}
 
-	path := ToSafeURL("enabled-products", fmt.Sprint(i.ProductID), "services", i.ServiceID)
+	path := ToSafeURL("enabled-products", i.ProductID.String(), "services", i.ServiceID)
 
 	resp, err := c.Get(path, nil)
 	if err != nil {
@@ -78,7 +79,7 @@ func (c *Client) GetProduct(i *ProductEnablementInput) (*ProductEnablement, erro
 	defer resp.Body.Close()
 
 	var h *ProductEnablement
-	if err := decodeBodyMap(resp.Body, &h); err != nil {
+	if err := DecodeBodyMap(resp.Body, &h); err != nil {
 		return nil, err
 	}
 
@@ -86,6 +87,9 @@ func (c *Client) GetProduct(i *ProductEnablementInput) (*ProductEnablement, erro
 }
 
 // EnableProduct enables the specified product on the service.
+//
+// Deprecated: The 'Enable' functions in the product-specific packages
+// should be used instead of this function.
 func (c *Client) EnableProduct(i *ProductEnablementInput) (*ProductEnablement, error) {
 	if i.ProductID == ProductUndefined {
 		return nil, ErrMissingProductID
@@ -94,22 +98,25 @@ func (c *Client) EnableProduct(i *ProductEnablementInput) (*ProductEnablement, e
 		return nil, ErrMissingServiceID
 	}
 
-	path := ToSafeURL("enabled-products", fmt.Sprint(i.ProductID), "services", i.ServiceID)
+	path := ToSafeURL("enabled-products", i.ProductID.String(), "services", i.ServiceID)
 
-	resp, err := c.PutForm(path, i, nil)
+	resp, err := c.PutJSON(path, i, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var http3 *ProductEnablement
-	if err := decodeBodyMap(resp.Body, &http3); err != nil {
+	if err := DecodeBodyMap(resp.Body, &http3); err != nil {
 		return nil, err
 	}
 	return http3, nil
 }
 
 // DisableProduct disables the specified product on the service.
+//
+// Deprecated: The 'Disable' functions in the product-specific packages
+// should be used instead of this function.
 func (c *Client) DisableProduct(i *ProductEnablementInput) error {
 	if i.ProductID == ProductUndefined {
 		return ErrMissingProductID
@@ -118,8 +125,12 @@ func (c *Client) DisableProduct(i *ProductEnablementInput) error {
 		return ErrMissingServiceID
 	}
 
-	path := ToSafeURL("enabled-products", fmt.Sprint(i.ProductID), "services", i.ServiceID)
+	path := ToSafeURL("enabled-products", i.ProductID.String(), "services", i.ServiceID)
 
-	_, err := c.Delete(path, nil)
-	return err
+	ignored, err := c.Delete(path, nil)
+	if err != nil {
+		return err
+	}
+	defer ignored.Body.Close()
+	return nil
 }

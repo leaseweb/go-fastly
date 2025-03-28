@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -9,15 +10,15 @@ func TestClient_Headers(t *testing.T) {
 
 	var err error
 	var tv *Version
-	record(t, "headers/version", func(c *Client) {
+	Record(t, "headers/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
 	// Create
 	var h *Header
-	record(t, "headers/create", func(c *Client) {
+	Record(t, "headers/create", func(c *Client) {
 		h, err = c.CreateHeader(&CreateHeaderInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           ToPointer("test-header"),
 			Action:         ToPointer(HeaderActionSet),
@@ -36,15 +37,15 @@ func TestClient_Headers(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, "headers/cleanup", func(c *Client) {
+		Record(t, "headers/cleanup", func(c *Client) {
 			_ = c.DeleteHeader(&DeleteHeaderInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-header",
 			})
 
 			_ = c.DeleteHeader(&DeleteHeaderInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "new-test-header",
 			})
@@ -81,9 +82,9 @@ func TestClient_Headers(t *testing.T) {
 
 	// List
 	var hs []*Header
-	record(t, "headers/list", func(c *Client) {
+	Record(t, "headers/list", func(c *Client) {
 		hs, err = c.ListHeaders(&ListHeadersInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -96,9 +97,9 @@ func TestClient_Headers(t *testing.T) {
 
 	// Get
 	var nh *Header
-	record(t, "headers/get", func(c *Client) {
+	Record(t, "headers/get", func(c *Client) {
 		nh, err = c.GetHeader(&GetHeaderInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-header",
 		})
@@ -136,9 +137,9 @@ func TestClient_Headers(t *testing.T) {
 
 	// Update
 	var uh *Header
-	record(t, "headers/update", func(c *Client) {
+	Record(t, "headers/update", func(c *Client) {
 		uh, err = c.UpdateHeader(&UpdateHeaderInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-header",
 			NewName:        ToPointer("new-test-header"),
@@ -154,9 +155,9 @@ func TestClient_Headers(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "headers/delete", func(c *Client) {
+	Record(t, "headers/delete", func(c *Client) {
 		err = c.DeleteHeader(&DeleteHeaderInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "new-test-header",
 		})
@@ -168,36 +169,36 @@ func TestClient_Headers(t *testing.T) {
 
 func TestClient_ListHeaders_validation(t *testing.T) {
 	var err error
-	_, err = testClient.ListHeaders(&ListHeadersInput{
+	_, err = TestClient.ListHeaders(&ListHeadersInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.ListHeaders(&ListHeadersInput{
+	_, err = TestClient.ListHeaders(&ListHeadersInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_CreateHeader_validation(t *testing.T) {
 	var err error
-	_, err = testClient.CreateHeader(&CreateHeaderInput{
+	_, err = TestClient.CreateHeader(&CreateHeaderInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateHeader(&CreateHeaderInput{
+	_, err = TestClient.CreateHeader(&CreateHeaderInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -205,27 +206,27 @@ func TestClient_CreateHeader_validation(t *testing.T) {
 func TestClient_GetHeader_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.GetHeader(&GetHeaderInput{
+	_, err = TestClient.GetHeader(&GetHeaderInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetHeader(&GetHeaderInput{
+	_, err = TestClient.GetHeader(&GetHeaderInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetHeader(&GetHeaderInput{
+	_, err = TestClient.GetHeader(&GetHeaderInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -233,27 +234,27 @@ func TestClient_GetHeader_validation(t *testing.T) {
 func TestClient_UpdateHeader_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.UpdateHeader(&UpdateHeaderInput{
+	_, err = TestClient.UpdateHeader(&UpdateHeaderInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateHeader(&UpdateHeaderInput{
+	_, err = TestClient.UpdateHeader(&UpdateHeaderInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateHeader(&UpdateHeaderInput{
+	_, err = TestClient.UpdateHeader(&UpdateHeaderInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -261,27 +262,27 @@ func TestClient_UpdateHeader_validation(t *testing.T) {
 func TestClient_DeleteHeader_validation(t *testing.T) {
 	var err error
 
-	err = testClient.DeleteHeader(&DeleteHeaderInput{
+	err = TestClient.DeleteHeader(&DeleteHeaderInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteHeader(&DeleteHeaderInput{
+	err = TestClient.DeleteHeader(&DeleteHeaderInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteHeader(&DeleteHeaderInput{
+	err = TestClient.DeleteHeader(&DeleteHeaderInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

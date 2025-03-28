@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -9,15 +10,15 @@ func TestClient_GrafanaCloudLogs(t *testing.T) {
 
 	var err error
 	var tv *Version
-	record(t, "grafanacloudlogs/version", func(c *Client) {
+	Record(t, "grafanacloudlogs/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
 	// Create
 	var d *GrafanaCloudLogs
-	record(t, "grafanacloudlogs/create", func(c *Client) {
+	Record(t, "grafanacloudlogs/create", func(c *Client) {
 		d, err = c.CreateGrafanaCloudLogs(&CreateGrafanaCloudLogsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           ToPointer("test-grafanacloudlogs"),
 			URL:            ToPointer("https://test123.grafana.net"),
@@ -34,15 +35,15 @@ func TestClient_GrafanaCloudLogs(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, "grafanacloudlogs/delete", func(c *Client) {
+		Record(t, "grafanacloudlogs/delete", func(c *Client) {
 			_ = c.DeleteGrafanaCloudLogs(&DeleteGrafanaCloudLogsInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-grafanacloudlogs",
 			})
 
 			_ = c.DeleteGrafanaCloudLogs(&DeleteGrafanaCloudLogsInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "new-test-grafanacloudlogs",
 			})
@@ -73,9 +74,9 @@ func TestClient_GrafanaCloudLogs(t *testing.T) {
 
 	// List
 	var ld []*GrafanaCloudLogs
-	record(t, "grafanacloudlogs/list", func(c *Client) {
+	Record(t, "grafanacloudlogs/list", func(c *Client) {
 		ld, err = c.ListGrafanaCloudLogs(&ListGrafanaCloudLogsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -83,14 +84,14 @@ func TestClient_GrafanaCloudLogs(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(ld) < 1 {
-		t.Errorf("bad GrafanaCloudLogss: %v", ld)
+		t.Errorf("bad GrafanaCloudLogs: %v", ld)
 	}
 
 	// Get
 	var nd *GrafanaCloudLogs
-	record(t, "grafanacloudlogs/get", func(c *Client) {
+	Record(t, "grafanacloudlogs/get", func(c *Client) {
 		nd, err = c.GetGrafanaCloudLogs(&GetGrafanaCloudLogsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-grafanacloudlogs",
 		})
@@ -116,9 +117,9 @@ func TestClient_GrafanaCloudLogs(t *testing.T) {
 
 	// Update
 	var ud *GrafanaCloudLogs
-	record(t, "grafanacloudlogs/update", func(c *Client) {
+	Record(t, "grafanacloudlogs/update", func(c *Client) {
 		ud, err = c.UpdateGrafanaCloudLogs(&UpdateGrafanaCloudLogsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-grafanacloudlogs",
 			NewName:        ToPointer("new-test-grafanacloudlogs"),
@@ -146,9 +147,9 @@ func TestClient_GrafanaCloudLogs(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "grafanacloudlogs/delete", func(c *Client) {
+	Record(t, "grafanacloudlogs/delete", func(c *Client) {
 		err = c.DeleteGrafanaCloudLogs(&DeleteGrafanaCloudLogsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "new-test-grafanacloudlogs",
 		})
@@ -161,18 +162,18 @@ func TestClient_GrafanaCloudLogs(t *testing.T) {
 func TestClient_ListGrafanaCloudLogs_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.ListGrafanaCloudLogs(&ListGrafanaCloudLogsInput{
+	_, err = TestClient.ListGrafanaCloudLogs(&ListGrafanaCloudLogsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.ListGrafanaCloudLogs(&ListGrafanaCloudLogsInput{
+	_, err = TestClient.ListGrafanaCloudLogs(&ListGrafanaCloudLogsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -180,18 +181,18 @@ func TestClient_ListGrafanaCloudLogs_validation(t *testing.T) {
 func TestClient_CreateGrafanaCloudLogs_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.CreateGrafanaCloudLogs(&CreateGrafanaCloudLogsInput{
+	_, err = TestClient.CreateGrafanaCloudLogs(&CreateGrafanaCloudLogsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateGrafanaCloudLogs(&CreateGrafanaCloudLogsInput{
+	_, err = TestClient.CreateGrafanaCloudLogs(&CreateGrafanaCloudLogsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -199,27 +200,27 @@ func TestClient_CreateGrafanaCloudLogs_validation(t *testing.T) {
 func TestClient_GetGrafanaCloudLogs_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.GetGrafanaCloudLogs(&GetGrafanaCloudLogsInput{
+	_, err = TestClient.GetGrafanaCloudLogs(&GetGrafanaCloudLogsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetGrafanaCloudLogs(&GetGrafanaCloudLogsInput{
+	_, err = TestClient.GetGrafanaCloudLogs(&GetGrafanaCloudLogsInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetGrafanaCloudLogs(&GetGrafanaCloudLogsInput{
+	_, err = TestClient.GetGrafanaCloudLogs(&GetGrafanaCloudLogsInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -227,27 +228,27 @@ func TestClient_GetGrafanaCloudLogs_validation(t *testing.T) {
 func TestClient_UpdateGrafanaCloudLogs_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.UpdateGrafanaCloudLogs(&UpdateGrafanaCloudLogsInput{
+	_, err = TestClient.UpdateGrafanaCloudLogs(&UpdateGrafanaCloudLogsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateGrafanaCloudLogs(&UpdateGrafanaCloudLogsInput{
+	_, err = TestClient.UpdateGrafanaCloudLogs(&UpdateGrafanaCloudLogsInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateGrafanaCloudLogs(&UpdateGrafanaCloudLogsInput{
+	_, err = TestClient.UpdateGrafanaCloudLogs(&UpdateGrafanaCloudLogsInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -255,27 +256,27 @@ func TestClient_UpdateGrafanaCloudLogs_validation(t *testing.T) {
 func TestClient_DeleteGrafanaCloudLogs_validation(t *testing.T) {
 	var err error
 
-	err = testClient.DeleteGrafanaCloudLogs(&DeleteGrafanaCloudLogsInput{
+	err = TestClient.DeleteGrafanaCloudLogs(&DeleteGrafanaCloudLogsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteGrafanaCloudLogs(&DeleteGrafanaCloudLogsInput{
+	err = TestClient.DeleteGrafanaCloudLogs(&DeleteGrafanaCloudLogsInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteGrafanaCloudLogs(&DeleteGrafanaCloudLogsInput{
+	err = TestClient.DeleteGrafanaCloudLogs(&DeleteGrafanaCloudLogsInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

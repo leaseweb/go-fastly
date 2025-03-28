@@ -41,21 +41,19 @@ type ListPrivateKeysInput struct {
 func (i *ListPrivateKeysInput) formatFilters() map[string]string {
 	result := map[string]string{}
 	pairings := map[string]any{
-		"filter[in_use]": i.FilterInUse,
-		"page[size]":     i.PageSize,
-		"page[number]":   i.PageNumber,
+		"filter[in_use]":             i.FilterInUse,
+		jsonapi.QueryParamPageSize:   i.PageSize,
+		jsonapi.QueryParamPageNumber: i.PageNumber,
 	}
 
 	for key, value := range pairings {
-		switch t := reflect.TypeOf(value).String(); t {
-		case "string":
-			if value != "" {
-				v, _ := value.(string) // type assert to avoid runtime panic (v will have zero value for its type)
+		switch v := value.(type) {
+		case string:
+			if v != "" {
 				result[key] = v
 			}
-		case "int":
-			if value != 0 {
-				v, _ := value.(int) // type assert to avoid runtime panic (v will have zero value for its type)
+		case int:
+			if v != 0 {
 				result[key] = strconv.Itoa(v)
 			}
 		}
@@ -69,7 +67,7 @@ func (c *Client) ListPrivateKeys(i *ListPrivateKeysInput) ([]*PrivateKey, error)
 	filters := &RequestOptions{
 		Params: i.formatFilters(),
 		Headers: map[string]string{
-			"Accept": "application/vnd.api+json", // this is required otherwise the filters don't work
+			"Accept": jsonapi.MediaType, // this is required otherwise the filters don't work
 		},
 	}
 
@@ -166,6 +164,10 @@ func (c *Client) DeletePrivateKey(i *DeletePrivateKeyInput) error {
 
 	path := ToSafeURL("tls", "private_keys", i.ID)
 
-	_, err := c.Delete(path, nil)
-	return err
+	ignored, err := c.Delete(path, nil)
+	if err != nil {
+		return err
+	}
+	defer ignored.Body.Close()
+	return nil
 }

@@ -89,6 +89,14 @@ var ErrMissingCertBlob = NewFieldError("CertBlob")
 // requires a "CertBundle" key, but one was not set.
 var ErrMissingCertBundle = NewFieldError("CertBundle")
 
+// ErrMissingComputeACLID is an error that is returned when an input struct
+// requires a "ComputeACLID" key, but one was not set.
+var ErrMissingComputeACLID = NewFieldError("ComputeACLID")
+
+// ErrMissingComputeACLIP is an error that is returned when an input struct
+// requires a "ComputeACLIP" key, but one was not set.
+var ErrMissingComputeACLIP = NewFieldError("ComputeACLIP")
+
 // ErrMissingContent is an error that is returned when an input struct
 // requires a "Content" key, but one was not set.
 var ErrMissingContent = NewFieldError("Content")
@@ -100,6 +108,14 @@ var ErrMissingType = NewFieldError("Type")
 // ErrMissingCustomerID is an error that is returned when an input struct
 // requires a "CustomerID" key, but one was not set.
 var ErrMissingCustomerID = NewFieldError("CustomerID")
+
+// ErrMissingAccessKeyID is an error that is returned when an input struct
+// requires a "AccessKeyID" key, but one was not set.
+var ErrMissingAccessKeyID = NewFieldError("AccessKeyID")
+
+// ErrMissingDescription is an error that is returned when an input struct
+// requires a "Description" key, but one was not set.
+var ErrMissingDescription = NewFieldError("Description")
 
 // ErrMissingDictionaryID is an error that is returned when an input struct
 // requires a "DictionaryID" key, but one was not set.
@@ -124,6 +140,10 @@ var ErrMissingTokenID = errors.New("missing required field 'TokenID'")
 // ErrMissingID is an error that is returned when an input struct
 // requires a "ID" key, but one was not set.
 var ErrMissingID = NewFieldError("ID")
+
+// ErrMissingDomainID is an error that is returned when an input struct
+// requires a "DomainID" key, but one was not set.
+var ErrMissingDomainID = NewFieldError("DomainID")
 
 // ErrMissingEntryID is an error that is returned when an input struct
 // requires a "EntryID" key, but one was not set.
@@ -224,6 +244,10 @@ var ErrMissingUserID = NewFieldError("UserID")
 // ErrMissingPermission is an error that is returned when an input struct
 // requires a "Permission" key, but one was not set.
 var ErrMissingPermission = NewFieldError("Permission")
+
+// ErrInvalidPermission is an error that is returned when an input struct
+// has a "Permission" key, but the one provided is invalid.
+var ErrInvalidPermission = NewFieldError("Permission").Message("invalid")
 
 // ErrMissingServiceVersion is an error that is returned when an input struct
 // requires a "ServiceVersion" key, but one was not set.
@@ -411,7 +435,7 @@ func NewHTTPError(resp *http.Response) *HTTPError {
 	switch resp.Header.Get("Content-Type") {
 	case jsonapi.MediaType:
 		// If this is a jsonapi response, decode it accordingly.
-		if err := decodeBodyMap(body, &e); err != nil {
+		if err := DecodeBodyMap(body, &e); err != nil {
 			addDecodeErr()
 		}
 
@@ -435,7 +459,7 @@ func NewHTTPError(resp *http.Response) *HTTPError {
 
 	default:
 		var lerr *legacyError
-		if err := decodeBodyMap(body, &lerr); err != nil {
+		if err := DecodeBodyMap(body, &lerr); err != nil {
 			addDecodeErr()
 		} else if lerr != nil {
 			// This is for better handling the KV Store Bulk Insert endpoint.
@@ -454,13 +478,21 @@ func NewHTTPError(resp *http.Response) *HTTPError {
 					if r, ok := le["reason"]; ok {
 						detail, _ = r.(string)
 					}
+					if d, ok := le["detail"]; ok {
+						detail, _ = d.(string)
+					}
+					var title string
 					if i, ok := le["index"]; ok {
 						index, _ = i.(float64)
+						title = fmt.Sprintf("error at index: %v", index)
+					}
+					if t, ok := le["title"]; ok {
+						title, _ = t.(string)
 					}
 					e.Errors = append(e.Errors, &ErrorObject{
 						Code:   code,
 						Detail: detail,
-						Title:  fmt.Sprintf("error at index: %v", index),
+						Title:  title,
 					})
 				}
 			} else {
@@ -521,12 +553,22 @@ func (e *HTTPError) Error() string {
 }
 
 // String implements the stringer interface and returns the string representing
-// the string text that includes the status code and corresponding status text.
+// the error text that includes the status code and corresponding status text.
 func (e *HTTPError) String() string {
 	return e.Error()
 }
 
-// IsNotFound returns true if the HTTP error code is a 404, false otherwise.
+// IsBadRequest returns true if the HTTP status code is 400, false otherwise.
+func (e *HTTPError) IsBadRequest() bool {
+	return e.StatusCode == http.StatusBadRequest
+}
+
+// IsNotFound returns true if the HTTP status code is 404, false otherwise.
 func (e *HTTPError) IsNotFound() bool {
-	return e.StatusCode == 404
+	return e.StatusCode == http.StatusNotFound
+}
+
+// IsPreconditionFailed returns true if the HTTP status code is 412, false otherwise.
+func (e *HTTPError) IsPreconditionFailed() bool {
+	return e.StatusCode == http.StatusPreconditionFailed
 }

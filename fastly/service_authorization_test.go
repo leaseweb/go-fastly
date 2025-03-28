@@ -1,8 +1,11 @@
 package fastly
 
 import (
+	"errors"
 	"reflect"
 	"testing"
+
+	"github.com/google/jsonapi"
 )
 
 func TestClient_ServiceAuthorizations(t *testing.T) {
@@ -13,9 +16,9 @@ func TestClient_ServiceAuthorizations(t *testing.T) {
 	// Create
 	var err error
 	var sa *ServiceAuthorization
-	record(t, fixtureBase+"create", func(c *Client) {
+	Record(t, fixtureBase+"create", func(c *Client) {
 		sa, err = c.CreateServiceAuthorization(&CreateServiceAuthorizationInput{
-			Service:    &SAService{ID: testServiceID},
+			Service:    &SAService{ID: TestDeliveryServiceID},
 			User:       &SAUser{ID: "1pnpEMCscfjqgvH7Qofda6"},
 			Permission: "full",
 		})
@@ -26,7 +29,7 @@ func TestClient_ServiceAuthorizations(t *testing.T) {
 
 	// List
 	var sasResp *ServiceAuthorizations
-	record(t, fixtureBase+"/list", func(c *Client) {
+	Record(t, fixtureBase+"/list", func(c *Client) {
 		sasResp, err = c.ListServiceAuthorizations(&ListServiceAuthorizationsInput{
 			PageSize: 10,
 		})
@@ -40,14 +43,14 @@ func TestClient_ServiceAuthorizations(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, fixtureBase+"cleanup", func(c *Client) {
+		Record(t, fixtureBase+"cleanup", func(c *Client) {
 			_ = c.DeleteServiceAuthorization(&DeleteServiceAuthorizationInput{
 				ID: sa.ID,
 			})
 		})
 	}()
 
-	if sa.Service.ID != testServiceID {
+	if sa.Service.ID != TestDeliveryServiceID {
 		t.Errorf("bad service id: %v", sa.Service.ID)
 	}
 
@@ -61,7 +64,7 @@ func TestClient_ServiceAuthorizations(t *testing.T) {
 
 	// Get
 	var nsa *ServiceAuthorization
-	record(t, fixtureBase+"get", func(c *Client) {
+	Record(t, fixtureBase+"get", func(c *Client) {
 		nsa, err = c.GetServiceAuthorization(&GetServiceAuthorizationInput{
 			ID: sa.ID,
 		})
@@ -70,13 +73,13 @@ func TestClient_ServiceAuthorizations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if nsa.Service.ID != testServiceID {
+	if nsa.Service.ID != TestDeliveryServiceID {
 		t.Errorf("bad service id: %v", nsa.Service)
 	}
 
 	// Update
 	var usa *ServiceAuthorization
-	record(t, fixtureBase+"update", func(c *Client) {
+	Record(t, fixtureBase+"update", func(c *Client) {
 		usa, err = c.UpdateServiceAuthorization(&UpdateServiceAuthorizationInput{
 			ID:         sa.ID,
 			Permission: "purge_select",
@@ -86,7 +89,7 @@ func TestClient_ServiceAuthorizations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if usa.Service.ID != testServiceID {
+	if usa.Service.ID != TestDeliveryServiceID {
 		t.Errorf("bad service id: %v", usa.Service)
 	}
 	if usa.Permission != "purge_select" {
@@ -94,7 +97,7 @@ func TestClient_ServiceAuthorizations(t *testing.T) {
 	}
 
 	// Delete
-	record(t, fixtureBase+"delete", func(c *Client) {
+	Record(t, fixtureBase+"delete", func(c *Client) {
 		err = c.DeleteServiceAuthorization(&DeleteServiceAuthorizationInput{
 			ID: sa.ID,
 		})
@@ -106,57 +109,57 @@ func TestClient_ServiceAuthorizations(t *testing.T) {
 
 func TestClient_GetServiceAuthorization_validation(t *testing.T) {
 	var err error
-	_, err = testClient.GetServiceAuthorization(&GetServiceAuthorizationInput{
+	_, err = TestClient.GetServiceAuthorization(&GetServiceAuthorizationInput{
 		ID: "",
 	})
-	if err != ErrMissingID {
+	if !errors.Is(err, ErrMissingID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_CreateServiceAuthorization_validation(t *testing.T) {
 	var err error
-	_, err = testClient.CreateServiceAuthorization(&CreateServiceAuthorizationInput{
+	_, err = TestClient.CreateServiceAuthorization(&CreateServiceAuthorizationInput{
 		Service: &SAService{ID: ""},
 		User:    &SAUser{ID: ""},
 	})
-	if err != ErrMissingServiceAuthorizationsService {
+	if !errors.Is(err, ErrMissingServiceAuthorizationsService) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateServiceAuthorization(&CreateServiceAuthorizationInput{
+	_, err = TestClient.CreateServiceAuthorization(&CreateServiceAuthorizationInput{
 		Service: &SAService{ID: "my-service-id"},
 		User:    &SAUser{ID: ""},
 	})
-	if err != ErrMissingServiceAuthorizationsUser {
+	if !errors.Is(err, ErrMissingServiceAuthorizationsUser) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_UpdateServiceAuthorization_validation(t *testing.T) {
 	var err error
-	_, err = testClient.UpdateServiceAuthorization(&UpdateServiceAuthorizationInput{
+	_, err = TestClient.UpdateServiceAuthorization(&UpdateServiceAuthorizationInput{
 		ID:         "",
 		Permission: "",
 	})
-	if err != ErrMissingID {
+	if !errors.Is(err, ErrMissingID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateServiceAuthorization(&UpdateServiceAuthorizationInput{
+	_, err = TestClient.UpdateServiceAuthorization(&UpdateServiceAuthorizationInput{
 		ID:         "my-service-authorization-id",
 		Permission: "",
 	})
-	if err != ErrMissingPermission {
+	if !errors.Is(err, ErrMissingPermission) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_DeleteServiceAuthorization_validation(t *testing.T) {
-	err := testClient.DeleteServiceAuthorization(&DeleteServiceAuthorizationInput{
+	err := TestClient.DeleteServiceAuthorization(&DeleteServiceAuthorizationInput{
 		ID: "",
 	})
-	if err != ErrMissingID {
+	if !errors.Is(err, ErrMissingID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -172,8 +175,8 @@ func TestClient_listServiceAuthorizations_formatFilters(t *testing.T) {
 				PageNumber: 2,
 			},
 			local: map[string]string{
-				"page[size]":   "2",
-				"page[number]": "2",
+				jsonapi.QueryParamPageSize:   "2",
+				jsonapi.QueryParamPageNumber: "2",
 			},
 		},
 	}

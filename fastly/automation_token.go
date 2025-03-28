@@ -111,7 +111,7 @@ func (c *Client) GetAutomationToken(i *GetAutomationTokenInput) (*AutomationToke
 	defer resp.Body.Close()
 
 	var t *AutomationToken
-	if err := decodeBodyMap(resp.Body, &t); err != nil {
+	if err := DecodeBodyMap(resp.Body, &t); err != nil {
 		return nil, err
 	}
 	return t, nil
@@ -120,10 +120,10 @@ func (c *Client) GetAutomationToken(i *GetAutomationTokenInput) (*AutomationToke
 // CreateAutomationTokenInput is used as input to the CreateAutomationToken function.
 type CreateAutomationTokenInput struct {
 	// ExpiresAt is a time-stamp (UTC) of when the token will expire.
-	ExpiresAt time.Time `json:"expires_at" url:"expires_at,omitempty"`
+	ExpiresAt *time.Time `json:"expires_at,omitempty" url:"expires_at,omitempty"`
 	// Name is the name of the token.
 	Name string `json:"name" url:"name,omitempty"`
-	// Password is the token password.
+	// Password is the password of the user the token is assigned to.
 	Password *string `json:"-" url:"password,omitempty"`
 	// Role is the role on the token (billing, engineer, user).
 	Role AutomationTokenRole `json:"role" url:"role,omitempty"`
@@ -142,10 +142,11 @@ type CreateAutomationTokenInput struct {
 //
 // Requires sudo capability for the token being used.
 func (c *Client) CreateAutomationToken(i *CreateAutomationTokenInput) (*AutomationToken, error) {
-	_, err := c.PostForm("/sudo", i, nil)
+	ignored, err := c.PostForm("/sudo", i, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer ignored.Body.Close()
 
 	resp, err := c.PostJSON("/automation-tokens", i, nil)
 	if err != nil {
@@ -154,7 +155,7 @@ func (c *Client) CreateAutomationToken(i *CreateAutomationTokenInput) (*Automati
 	defer resp.Body.Close()
 
 	var t *AutomationToken
-	if err := decodeBodyMap(resp.Body, &t); err != nil {
+	if err := DecodeBodyMap(resp.Body, &t); err != nil {
 		return nil, err
 	}
 	return t, nil

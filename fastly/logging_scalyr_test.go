@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -9,15 +10,15 @@ func TestClient_Scalyrs(t *testing.T) {
 
 	var err error
 	var tv *Version
-	record(t, "scalyrs/version", func(c *Client) {
+	Record(t, "scalyrs/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
 	// Create
 	var s *Scalyr
-	record(t, "scalyrs/create", func(c *Client) {
+	Record(t, "scalyrs/create", func(c *Client) {
 		s, err = c.CreateScalyr(&CreateScalyrInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           ToPointer("test-scalyr"),
 			Format:         ToPointer("%h %l %u %t \"%r\" %>s %b"),
@@ -34,15 +35,15 @@ func TestClient_Scalyrs(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, "scalyrs/cleanup", func(c *Client) {
+		Record(t, "scalyrs/cleanup", func(c *Client) {
 			_ = c.DeleteScalyr(&DeleteScalyrInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-scalyr",
 			})
 
 			_ = c.DeleteScalyr(&DeleteScalyrInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "new-test-scalyr",
 			})
@@ -73,9 +74,9 @@ func TestClient_Scalyrs(t *testing.T) {
 
 	// List
 	var ss []*Scalyr
-	record(t, "scalyrs/list", func(c *Client) {
+	Record(t, "scalyrs/list", func(c *Client) {
 		ss, err = c.ListScalyrs(&ListScalyrsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -88,9 +89,9 @@ func TestClient_Scalyrs(t *testing.T) {
 
 	// Get
 	var ns *Scalyr
-	record(t, "scalyrs/get", func(c *Client) {
+	Record(t, "scalyrs/get", func(c *Client) {
 		ns, err = c.GetScalyr(&GetScalyrInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-scalyr",
 		})
@@ -122,9 +123,9 @@ func TestClient_Scalyrs(t *testing.T) {
 
 	// Update
 	var us *Scalyr
-	record(t, "scalyrs/update", func(c *Client) {
+	Record(t, "scalyrs/update", func(c *Client) {
 		us, err = c.UpdateScalyr(&UpdateScalyrInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-scalyr",
 			NewName:        ToPointer("new-test-scalyr"),
@@ -150,9 +151,9 @@ func TestClient_Scalyrs(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "scalyrs/delete", func(c *Client) {
+	Record(t, "scalyrs/delete", func(c *Client) {
 		err = c.DeleteScalyr(&DeleteScalyrInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "new-test-scalyr",
 		})
@@ -164,36 +165,36 @@ func TestClient_Scalyrs(t *testing.T) {
 
 func TestClient_ListScalyrs_validation(t *testing.T) {
 	var err error
-	_, err = testClient.ListScalyrs(&ListScalyrsInput{
+	_, err = TestClient.ListScalyrs(&ListScalyrsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.ListScalyrs(&ListScalyrsInput{
+	_, err = TestClient.ListScalyrs(&ListScalyrsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_CreateScalyr_validation(t *testing.T) {
 	var err error
-	_, err = testClient.CreateScalyr(&CreateScalyrInput{
+	_, err = TestClient.CreateScalyr(&CreateScalyrInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateScalyr(&CreateScalyrInput{
+	_, err = TestClient.CreateScalyr(&CreateScalyrInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -201,27 +202,27 @@ func TestClient_CreateScalyr_validation(t *testing.T) {
 func TestClient_GetScalyr_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.GetScalyr(&GetScalyrInput{
+	_, err = TestClient.GetScalyr(&GetScalyrInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetScalyr(&GetScalyrInput{
+	_, err = TestClient.GetScalyr(&GetScalyrInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetScalyr(&GetScalyrInput{
+	_, err = TestClient.GetScalyr(&GetScalyrInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -229,27 +230,27 @@ func TestClient_GetScalyr_validation(t *testing.T) {
 func TestClient_UpdateScalyr_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.UpdateScalyr(&UpdateScalyrInput{
+	_, err = TestClient.UpdateScalyr(&UpdateScalyrInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateScalyr(&UpdateScalyrInput{
+	_, err = TestClient.UpdateScalyr(&UpdateScalyrInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateScalyr(&UpdateScalyrInput{
+	_, err = TestClient.UpdateScalyr(&UpdateScalyrInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -257,27 +258,27 @@ func TestClient_UpdateScalyr_validation(t *testing.T) {
 func TestClient_DeleteScalyr_validation(t *testing.T) {
 	var err error
 
-	err = testClient.DeleteScalyr(&DeleteScalyrInput{
+	err = TestClient.DeleteScalyr(&DeleteScalyrInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteScalyr(&DeleteScalyrInput{
+	err = TestClient.DeleteScalyr(&DeleteScalyrInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteScalyr(&DeleteScalyrInput{
+	err = TestClient.DeleteScalyr(&DeleteScalyrInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

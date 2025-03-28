@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -9,15 +10,15 @@ func TestClient_CacheSettings(t *testing.T) {
 
 	var err error
 	var tv *Version
-	record(t, "cache_settings/version", func(c *Client) {
+	Record(t, "cache_settings/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
 	// Create
 	var cacheSetting *CacheSetting
-	record(t, "cache_settings/create", func(c *Client) {
+	Record(t, "cache_settings/create", func(c *Client) {
 		cacheSetting, err = c.CreateCacheSetting(&CreateCacheSettingInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           ToPointer("test-cache-setting"),
 			Action:         ToPointer(CacheSettingActionCache),
@@ -31,15 +32,15 @@ func TestClient_CacheSettings(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, "cache_settings/cleanup", func(c *Client) {
+		Record(t, "cache_settings/cleanup", func(c *Client) {
 			_ = c.DeleteCacheSetting(&DeleteCacheSettingInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-cache-setting",
 			})
 
 			_ = c.DeleteCacheSetting(&DeleteCacheSettingInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "new-test-cache-setting",
 			})
@@ -61,9 +62,9 @@ func TestClient_CacheSettings(t *testing.T) {
 
 	// List
 	var cacheSettings []*CacheSetting
-	record(t, "cache_settings/list", func(c *Client) {
+	Record(t, "cache_settings/list", func(c *Client) {
 		cacheSettings, err = c.ListCacheSettings(&ListCacheSettingsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -76,9 +77,9 @@ func TestClient_CacheSettings(t *testing.T) {
 
 	// Get
 	var newCacheSetting *CacheSetting
-	record(t, "cache_settings/get", func(c *Client) {
+	Record(t, "cache_settings/get", func(c *Client) {
 		newCacheSetting, err = c.GetCacheSetting(&GetCacheSettingInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-cache-setting",
 		})
@@ -101,9 +102,9 @@ func TestClient_CacheSettings(t *testing.T) {
 
 	// Update
 	var updatedCacheSetting *CacheSetting
-	record(t, "cache_settings/update", func(c *Client) {
+	Record(t, "cache_settings/update", func(c *Client) {
 		updatedCacheSetting, err = c.UpdateCacheSetting(&UpdateCacheSettingInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-cache-setting",
 			NewName:        ToPointer("new-test-cache-setting"),
@@ -117,9 +118,9 @@ func TestClient_CacheSettings(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "cache_settings/delete", func(c *Client) {
+	Record(t, "cache_settings/delete", func(c *Client) {
 		err = c.DeleteCacheSetting(&DeleteCacheSettingInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "new-test-cache-setting",
 		})
@@ -131,36 +132,36 @@ func TestClient_CacheSettings(t *testing.T) {
 
 func TestClient_ListCacheSettings_validation(t *testing.T) {
 	var err error
-	_, err = testClient.ListCacheSettings(&ListCacheSettingsInput{
+	_, err = TestClient.ListCacheSettings(&ListCacheSettingsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.ListCacheSettings(&ListCacheSettingsInput{
+	_, err = TestClient.ListCacheSettings(&ListCacheSettingsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_CreateCacheSetting_validation(t *testing.T) {
 	var err error
-	_, err = testClient.CreateCacheSetting(&CreateCacheSettingInput{
+	_, err = TestClient.CreateCacheSetting(&CreateCacheSettingInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateCacheSetting(&CreateCacheSettingInput{
+	_, err = TestClient.CreateCacheSetting(&CreateCacheSettingInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -168,27 +169,27 @@ func TestClient_CreateCacheSetting_validation(t *testing.T) {
 func TestClient_GetCacheSetting_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.GetCacheSetting(&GetCacheSettingInput{
+	_, err = TestClient.GetCacheSetting(&GetCacheSettingInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetCacheSetting(&GetCacheSettingInput{
+	_, err = TestClient.GetCacheSetting(&GetCacheSettingInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetCacheSetting(&GetCacheSettingInput{
+	_, err = TestClient.GetCacheSetting(&GetCacheSettingInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -196,27 +197,27 @@ func TestClient_GetCacheSetting_validation(t *testing.T) {
 func TestClient_UpdateCacheSetting_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.UpdateCacheSetting(&UpdateCacheSettingInput{
+	_, err = TestClient.UpdateCacheSetting(&UpdateCacheSettingInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateCacheSetting(&UpdateCacheSettingInput{
+	_, err = TestClient.UpdateCacheSetting(&UpdateCacheSettingInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateCacheSetting(&UpdateCacheSettingInput{
+	_, err = TestClient.UpdateCacheSetting(&UpdateCacheSettingInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -224,27 +225,27 @@ func TestClient_UpdateCacheSetting_validation(t *testing.T) {
 func TestClient_DeleteCacheSetting_validation(t *testing.T) {
 	var err error
 
-	err = testClient.DeleteCacheSetting(&DeleteCacheSettingInput{
+	err = TestClient.DeleteCacheSetting(&DeleteCacheSettingInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteCacheSetting(&DeleteCacheSettingInput{
+	err = TestClient.DeleteCacheSetting(&DeleteCacheSettingInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteCacheSetting(&DeleteCacheSettingInput{
+	err = TestClient.DeleteCacheSetting(&DeleteCacheSettingInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

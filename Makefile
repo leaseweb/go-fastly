@@ -6,7 +6,6 @@ FILES ?= ./...
 
 # List all our actual files, excluding vendor
 GOPKGS ?= $(shell $(GO) list $(FILES) | grep -v /vendor/)
-GOFILES ?= $(shell find . -name '*.go' | grep -v /vendor/)
 
 # Tags specific for building
 GOTAGS ?=
@@ -16,8 +15,13 @@ GOMAXPROCS ?= 4
 
 NAME := $(notdir $(shell pwd))
 
-# Test Service ID
-FASTLY_TEST_SERVICE_ID ?=
+# Test Resource IDs
+FASTLY_TEST_DELIVERY_SERVICE_ID ?=
+DEFAULT_FASTLY_TEST_DELIVERY_SERVICE_ID = kKJb5bOFI47uHeBVluGfX1
+FASTLY_TEST_COMPUTE_SERVICE_ID ?=
+DEFAULT_FASTLY_TEST_COMPUTE_SERVICE_ID = XsjdElScZGjmfCcTwsYRC1
+FASTLY_TEST_NGWAF_WORKSPACE_ID ?=
+DEFAULT_FASTLY_TEST_NGWAF_WORKSPACE_ID = alk6DTsYKHKucJCOIavaJM
 FASTLY_API_KEY ?=
 #
 # Enables support for tools such as https://github.com/rakyll/gotest
@@ -26,11 +30,6 @@ TEST_COMMAND ?= $(GO) test
 all: mod-download dev-dependencies tidy fmt fiximports test vet staticcheck semgrep ## Runs all of the required cleaning and verification targets.
 .PHONY: all
 
-tidy: ## Cleans the Go module.
-	@echo "==> Tidying module"
-	@$(GO) mod tidy
-.PHONY: tidy
-
 mod-download: ## Downloads the Go module.
 	@echo "==> Downloading Go module"
 	@$(GO) mod download
@@ -38,15 +37,45 @@ mod-download: ## Downloads the Go module.
 
 dev-dependencies: ## Downloads the necessary dev dependencies.
 	@echo "==> Downloading development dependencies"
-	@$(GO) install honnef.co/go/tools/cmd/staticcheck@latest
-	@$(GO) install golang.org/x/tools/cmd/goimports
+	@$(GO) install honnef.co/go/tools/cmd/staticcheck@v0.6.0
+	@$(GO) install golang.org/x/tools/cmd/goimports@v0.30.0
 	@if [[ "$$(uname)" == 'Darwin' ]]; then brew install semgrep; fi
 .PHONY: dev-dependencies
+
+tidy: ## Cleans the Go module.
+	@echo "==> Tidying module"
+	@$(GO) mod tidy
+.PHONY: tidy
+
+fmt: ## Properly formats Go files and orders dependencies.
+	@echo "==> Running gofmt"
+	@gofmt -s -w fastly internal tools
+.PHONY: fmt
+
+fiximports: ## Properly formats and orders imports.
+	@echo "==> Fixing imports"
+	@goimports -w fastly internal tools
+.PHONY: fiximports
 
 test: ## Runs the test suite with VCR mocks enabled.
 	@echo "==> Testing ${NAME}"
 	@$(TEST_COMMAND) -timeout=30s -parallel=20 -tags="${GOTAGS}" ${GOPKGS} ${TESTARGS}
 .PHONY: test
+
+vet: ## Identifies common errors.
+	@echo "==> Running go vet"
+	@$(GO) vet ./...
+.PHONY: vet
+
+staticcheck: ## Runs the staticcheck linter.
+	@echo "==> Running staticcheck"
+	@staticcheck -version
+	@staticcheck ./...
+.PHONY: staticcheck
+
+semgrep: ## Run semgrep checker.
+	if command -v semgrep &> /dev/null; then semgrep ci --config auto --exclude-rule generic.secrets.security.detected-private-key.detected-private-key $(SEMGREP_ARGS); fi
+.PHONY: semgrep
 
 test-race: ## Runs the test suite with the -race flag to identify race conditions, if they exist.
 	@echo "==> Testing ${NAME} (race)"
@@ -60,10 +89,20 @@ test-full: ## Runs the tests with VCR disabled (i.e., makes external calls).
 		'${GO} test -timeout=60s -parallel=20 ${GOPKGS} ${TESTARGS}'
 .PHONY: test-full
 
-fix-fixtures: ## Updates test fixtures with a specified default service ID.
+fix-delivery-fixtures: ## Updates test fixtures with a specified default Delivery service ID.
 	@echo "==> Updating fixtures"
-	@$(shell pwd)/scripts/fixFixtures.sh ${FASTLY_TEST_SERVICE_ID}
-.PHONY: fix-fixtures
+	@$(shell pwd)/scripts/fixFixtures.sh ${FASTLY_TEST_DELIVERY_SERVICE_ID} ${DEFAULT_FASTLY_TEST_DELIVERY_SERVICE_ID}
+.PHONY: fix-delivery-fixtures
+
+fix-compute-fixtures: ## Updates test fixtures with a specified default Compute service ID.
+	@echo "==> Updating fixtures"
+	@$(shell pwd)/scripts/fixFixtures.sh ${FASTLY_TEST_COMPUTE_SERVICE_ID} ${DEFAULT_FASTLY_TEST_COMPUTE_SERVICE_ID}
+.PHONY: fix-compute-fixtures
+
+fix-ngwaf-fixtures: ## Updates test fixtures with a specified default Next-Gen WAF workspace ID.
+	@echo "==> Updating fixtures"
+	@$(shell pwd)/scripts/fixFixtures.sh ${FASTLY_TEST_NGWAF_WORKSPACE_ID} ${DEFAULT_FASTLY_TEST_NGWAF_WORKSPACE_ID}
+.PHONY: fix-ngwaf-fixtures
 
 check-imports: ## A check which lists improperly-formatted imports, if they exist.
 	@$(shell pwd)/scripts/check-imports.sh
@@ -77,34 +116,8 @@ check-mod: ## A check which lists extraneous dependencies, if they exist.
 	@$(shell pwd)/scripts/check-mod.sh
 .PHONY: check-mod
 
-fiximports: ## Properly formats and orders imports.
-	@echo "==> Fixing imports"
-	@goimports -w {fastly,tools}
-.PHONY: fiximports
-
-fmt: ## Properly formats Go files and orders dependencies.
-	@echo "==> Running gofmt"
-	@gofmt -s -w ${GOFILES}
-.PHONY: fmt
-
-vet: ## Identifies common errors.
-	@echo "==> Running go vet"
-	@$(GO) vet ./...
-.PHONY: vet
-
-staticcheck: ## Runs the staticcheck linter.
-	@echo "==> Running staticcheck"
-	@staticcheck -version
-	@staticcheck ./...
-.PHONY: staticcheck
-
 nilaway: ## Run nilaway
 	@nilaway ./...
-
-# Run semgrep checker.
-.PHONY: semgrep
-semgrep:
-	if command -v semgrep &> /dev/null; then semgrep ci --config auto --exclude-rule generic.secrets.security.detected-private-key.detected-private-key $(SEMGREP_ARGS); fi
 
 .PHONY: help
 help: ## Prints this help menu.

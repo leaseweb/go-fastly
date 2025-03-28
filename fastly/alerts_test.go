@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -24,13 +25,13 @@ func TestClient_FastlyAlerts(t *testing.T) {
 		IntegrationIDs:     []string{},
 		Metric:             ToPointer("status_5xx"),
 		Name:               ToPointer("test name"),
-		ServiceID:          ToPointer(testServiceID),
+		ServiceID:          ToPointer(TestDeliveryServiceID),
 		Source:             ToPointer("domains"),
 	}
 
 	// Test
 	var err error
-	record(t, "alerts/test_alert_definition", func(c *Client) {
+	Record(t, "alerts/test_alert_definition", func(c *Client) {
 		err = c.TestAlertDefinition(&TestAlertDefinitionInput{
 			CreateAlertDefinitionInput: *cadi,
 		})
@@ -41,7 +42,7 @@ func TestClient_FastlyAlerts(t *testing.T) {
 
 	// Create
 	var ad *AlertDefinition
-	record(t, "alerts/create_alert_definition", func(c *Client) {
+	Record(t, "alerts/create_alert_definition", func(c *Client) {
 		ad, err = c.CreateAlertDefinition(cadi)
 	})
 	if err != nil {
@@ -49,7 +50,7 @@ func TestClient_FastlyAlerts(t *testing.T) {
 	}
 	// Ensure deleted
 	defer func() {
-		record(t, "alerts/cleanup_alert_definition", func(c *Client) {
+		Record(t, "alerts/cleanup_alert_definition", func(c *Client) {
 			err = c.DeleteAlertDefinition(&DeleteAlertDefinitionInput{
 				ID: &ad.ID,
 			})
@@ -68,7 +69,7 @@ func TestClient_FastlyAlerts(t *testing.T) {
 		t.Errorf("bad name: %v", ad.Name)
 	}
 
-	if ad.ServiceID != testServiceID {
+	if ad.ServiceID != TestDeliveryServiceID {
 		t.Errorf("bad service_id: %v", ad.ServiceID)
 	}
 
@@ -86,12 +87,12 @@ func TestClient_FastlyAlerts(t *testing.T) {
 
 	// List Definitions
 	var adr *AlertDefinitionsResponse
-	record(t, "alerts/list_alert_definitions", func(c *Client) {
+	Record(t, "alerts/list_alert_definitions", func(c *Client) {
 		adr, err = c.ListAlertDefinitions(&ListAlertDefinitionsInput{
 			Cursor:    ToPointer(""),
 			Limit:     ToPointer(10),
 			Name:      ToPointer(ad.Name),
-			ServiceID: ToPointer(testServiceID),
+			ServiceID: ToPointer(TestDeliveryServiceID),
 			Sort:      ToPointer("name"),
 		})
 	})
@@ -104,7 +105,7 @@ func TestClient_FastlyAlerts(t *testing.T) {
 
 	// Get
 	var gad *AlertDefinition
-	record(t, "alerts/get_alert_definition", func(c *Client) {
+	Record(t, "alerts/get_alert_definition", func(c *Client) {
 		gad, err = c.GetAlertDefinition(&GetAlertDefinitionInput{
 			ID: &ad.ID,
 		})
@@ -118,7 +119,7 @@ func TestClient_FastlyAlerts(t *testing.T) {
 
 	// Update
 	var uad *AlertDefinition
-	record(t, "alerts/update_alert_definition", func(c *Client) {
+	Record(t, "alerts/update_alert_definition", func(c *Client) {
 		uad, err = c.UpdateAlertDefinition(&UpdateAlertDefinitionInput{
 			Description:        ToPointer("test description"),
 			Dimensions:         testDimensions,
@@ -137,7 +138,7 @@ func TestClient_FastlyAlerts(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "alerts/delete_alert_definition", func(c *Client) {
+	Record(t, "alerts/delete_alert_definition", func(c *Client) {
 		err = c.DeleteAlertDefinition(&DeleteAlertDefinitionInput{
 			ID: &ad.ID,
 		})
@@ -147,14 +148,14 @@ func TestClient_FastlyAlerts(t *testing.T) {
 	}
 
 	// List History
-	record(t, "alerts/list_alert_history", func(c *Client) {
+	Record(t, "alerts/list_alert_history", func(c *Client) {
 		_, err = c.ListAlertHistory(&ListAlertHistoryInput{
 			After:        ToPointer("2006-01-02T15:04:05Z"),
 			Before:       ToPointer("2056-01-02T15:04:05Z"),
 			Cursor:       ToPointer(""),
 			DefinitionID: ToPointer(ad.ID),
 			Limit:        ToPointer(10),
-			ServiceID:    ToPointer(testServiceID),
+			ServiceID:    ToPointer(TestDeliveryServiceID),
 			Sort:         ToPointer("-start"),
 			Status:       ToPointer(""),
 		})
@@ -181,14 +182,14 @@ func TestClient_FastlyPercentAlerts(t *testing.T) {
 		IntegrationIDs:     []string{},
 		Metric:             ToPointer("status_5xx"),
 		Name:               ToPointer("test name"),
-		ServiceID:          ToPointer(testServiceID),
+		ServiceID:          ToPointer(TestDeliveryServiceID),
 		Source:             ToPointer("stats"),
 	}
 
 	// Create
 	var ad *AlertDefinition
 	var err error
-	record(t, "alerts/create_alert_definition_stats_percent", func(c *Client) {
+	Record(t, "alerts/create_alert_definition_stats_percent", func(c *Client) {
 		ad, err = c.CreateAlertDefinition(cadi)
 
 	})
@@ -197,7 +198,7 @@ func TestClient_FastlyPercentAlerts(t *testing.T) {
 	}
 	// Ensure deleted
 	defer func() {
-		record(t, "alerts/cleanup_alert_definition_stats_percent", func(c *Client) {
+		Record(t, "alerts/cleanup_alert_definition_stats_percent", func(c *Client) {
 			err = c.DeleteAlertDefinition(&DeleteAlertDefinitionInput{
 				ID: &ad.ID,
 			})
@@ -216,7 +217,7 @@ func TestClient_FastlyPercentAlerts(t *testing.T) {
 		t.Errorf("bad name: %v", ad.Name)
 	}
 
-	if ad.ServiceID != testServiceID {
+	if ad.ServiceID != TestDeliveryServiceID {
 		t.Errorf("bad service_id: %v", ad.ServiceID)
 	}
 
@@ -235,29 +236,29 @@ func TestClient_FastlyPercentAlerts(t *testing.T) {
 
 func TestClient_GetAlertDefinition_validation(t *testing.T) {
 	var err error
-	_, err = testClient.GetAlertDefinition(&GetAlertDefinitionInput{
+	_, err = TestClient.GetAlertDefinition(&GetAlertDefinitionInput{
 		ID: nil,
 	})
-	if err != ErrMissingID {
+	if !errors.Is(err, ErrMissingID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_UpdateAlertDefinition_validation(t *testing.T) {
 	var err error
-	_, err = testClient.UpdateAlertDefinition(&UpdateAlertDefinitionInput{
+	_, err = TestClient.UpdateAlertDefinition(&UpdateAlertDefinitionInput{
 		ID: nil,
 	})
-	if err != ErrMissingID {
+	if !errors.Is(err, ErrMissingID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
 
 func TestClient_DeleteAlertDefinition_validation(t *testing.T) {
-	err := testClient.DeleteAlertDefinition(&DeleteAlertDefinitionInput{
+	err := TestClient.DeleteAlertDefinition(&DeleteAlertDefinitionInput{
 		ID: nil,
 	})
-	if err != ErrMissingID {
+	if !errors.Is(err, ErrMissingID) {
 		t.Errorf("bad error: %s", err)
 	}
 }

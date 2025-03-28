@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -9,15 +10,15 @@ func TestClient_GCSs(t *testing.T) {
 
 	var err error
 	var tv *Version
-	record(t, "gcses/version", func(c *Client) {
+	Record(t, "gcses/version", func(c *Client) {
 		tv = testVersion(t, c)
 	})
 
 	// Create
 	var gcsCreateResp1, gcsCreateResp2, gcsCreateResp3 *GCS
-	record(t, "gcses/create", func(c *Client) {
+	Record(t, "gcses/create", func(c *Client) {
 		gcsCreateResp1, err = c.CreateGCS(&CreateGCSInput{
-			ServiceID:        testServiceID,
+			ServiceID:        TestDeliveryServiceID,
 			ServiceVersion:   *tv.Number,
 			Name:             ToPointer("test-gcs"),
 			ProjectID:        ToPointer("logging-project"),
@@ -39,9 +40,9 @@ func TestClient_GCSs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record(t, "gcses/create2", func(c *Client) {
+	Record(t, "gcses/create2", func(c *Client) {
 		gcsCreateResp2, err = c.CreateGCS(&CreateGCSInput{
-			ServiceID:       testServiceID,
+			ServiceID:       TestDeliveryServiceID,
 			ServiceVersion:  *tv.Number,
 			Name:            ToPointer("test-gcs-2"),
 			ProjectID:       ToPointer("logging-project"),
@@ -62,9 +63,9 @@ func TestClient_GCSs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record(t, "gcses/create3", func(c *Client) {
+	Record(t, "gcses/create3", func(c *Client) {
 		gcsCreateResp3, err = c.CreateGCS(&CreateGCSInput{
-			ServiceID:        testServiceID,
+			ServiceID:        TestDeliveryServiceID,
 			ServiceVersion:   *tv.Number,
 			Name:             ToPointer("test-gcs-3"),
 			ProjectID:        ToPointer("logging-project"),
@@ -87,9 +88,9 @@ func TestClient_GCSs(t *testing.T) {
 
 	// This case is expected to fail because both CompressionCodec and
 	// GzipLevel are present.
-	record(t, "gcses/create4", func(c *Client) {
+	Record(t, "gcses/create4", func(c *Client) {
 		_, err = c.CreateGCS(&CreateGCSInput{
-			ServiceID:        testServiceID,
+			ServiceID:        TestDeliveryServiceID,
 			ServiceVersion:   *tv.Number,
 			Name:             ToPointer("test-gcs-4"),
 			ProjectID:        ToPointer("logging-project"),
@@ -113,27 +114,27 @@ func TestClient_GCSs(t *testing.T) {
 
 	// Ensure deleted
 	defer func() {
-		record(t, "gcses/cleanup", func(c *Client) {
+		Record(t, "gcses/cleanup", func(c *Client) {
 			_ = c.DeleteGCS(&DeleteGCSInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-gcs",
 			})
 
 			_ = c.DeleteGCS(&DeleteGCSInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-gcs-2",
 			})
 
 			_ = c.DeleteGCS(&DeleteGCSInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "test-gcs-3",
 			})
 
 			_ = c.DeleteGCS(&DeleteGCSInput{
-				ServiceID:      testServiceID,
+				ServiceID:      TestDeliveryServiceID,
 				ServiceVersion: *tv.Number,
 				Name:           "new-test-gcs",
 			})
@@ -200,9 +201,9 @@ func TestClient_GCSs(t *testing.T) {
 
 	// List
 	var gcses []*GCS
-	record(t, "gcses/list", func(c *Client) {
+	Record(t, "gcses/list", func(c *Client) {
 		gcses, err = c.ListGCSs(&ListGCSsInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 		})
 	})
@@ -215,9 +216,9 @@ func TestClient_GCSs(t *testing.T) {
 
 	// Get
 	var gcsGetResp *GCS
-	record(t, "gcses/get", func(c *Client) {
+	Record(t, "gcses/get", func(c *Client) {
 		gcsGetResp, err = c.GetGCS(&GetGCSInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-gcs",
 		})
@@ -270,9 +271,9 @@ func TestClient_GCSs(t *testing.T) {
 
 	// Update
 	var gcsUpdateResp1, gcsUpdateResp2, gcsUpdateResp3 *GCS
-	record(t, "gcses/update", func(c *Client) {
+	Record(t, "gcses/update", func(c *Client) {
 		gcsUpdateResp1, err = c.UpdateGCS(&UpdateGCSInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-gcs",
 			NewName:        ToPointer("new-test-gcs"),
@@ -284,9 +285,9 @@ func TestClient_GCSs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record(t, "gcses/update2", func(c *Client) {
+	Record(t, "gcses/update2", func(c *Client) {
 		gcsUpdateResp2, err = c.UpdateGCS(&UpdateGCSInput{
-			ServiceID:        testServiceID,
+			ServiceID:        TestDeliveryServiceID,
 			ServiceVersion:   *tv.Number,
 			Name:             "test-gcs-2",
 			CompressionCodec: ToPointer("zstd"),
@@ -296,9 +297,9 @@ func TestClient_GCSs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record(t, "gcses/update3", func(c *Client) {
+	Record(t, "gcses/update3", func(c *Client) {
 		gcsUpdateResp3, err = c.UpdateGCS(&UpdateGCSInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "test-gcs-3",
 			GzipLevel:      ToPointer(9),
@@ -334,9 +335,9 @@ func TestClient_GCSs(t *testing.T) {
 	}
 
 	// Delete
-	record(t, "gcses/delete", func(c *Client) {
+	Record(t, "gcses/delete", func(c *Client) {
 		err = c.DeleteGCS(&DeleteGCSInput{
-			ServiceID:      testServiceID,
+			ServiceID:      TestDeliveryServiceID,
 			ServiceVersion: *tv.Number,
 			Name:           "new-test-gcs",
 		})
@@ -349,18 +350,18 @@ func TestClient_GCSs(t *testing.T) {
 func TestClient_ListGCSs_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.ListGCSs(&ListGCSsInput{
+	_, err = TestClient.ListGCSs(&ListGCSsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.ListGCSs(&ListGCSsInput{
+	_, err = TestClient.ListGCSs(&ListGCSsInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -368,18 +369,18 @@ func TestClient_ListGCSs_validation(t *testing.T) {
 func TestClient_CreateGCS_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.CreateGCS(&CreateGCSInput{
+	_, err = TestClient.CreateGCS(&CreateGCSInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.CreateGCS(&CreateGCSInput{
+	_, err = TestClient.CreateGCS(&CreateGCSInput{
 		ServiceID:      "foo",
 		ServiceVersion: 0,
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -387,27 +388,27 @@ func TestClient_CreateGCS_validation(t *testing.T) {
 func TestClient_GetGCS_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.GetGCS(&GetGCSInput{
+	_, err = TestClient.GetGCS(&GetGCSInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetGCS(&GetGCSInput{
+	_, err = TestClient.GetGCS(&GetGCSInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.GetGCS(&GetGCSInput{
+	_, err = TestClient.GetGCS(&GetGCSInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -415,27 +416,27 @@ func TestClient_GetGCS_validation(t *testing.T) {
 func TestClient_UpdateGCS_validation(t *testing.T) {
 	var err error
 
-	_, err = testClient.UpdateGCS(&UpdateGCSInput{
+	_, err = TestClient.UpdateGCS(&UpdateGCSInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateGCS(&UpdateGCSInput{
+	_, err = TestClient.UpdateGCS(&UpdateGCSInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	_, err = testClient.UpdateGCS(&UpdateGCSInput{
+	_, err = TestClient.UpdateGCS(&UpdateGCSInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -443,27 +444,27 @@ func TestClient_UpdateGCS_validation(t *testing.T) {
 func TestClient_DeleteGCS_validation(t *testing.T) {
 	var err error
 
-	err = testClient.DeleteGCS(&DeleteGCSInput{
+	err = TestClient.DeleteGCS(&DeleteGCSInput{
 		ServiceID:      "foo",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingName {
+	if !errors.Is(err, ErrMissingName) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteGCS(&DeleteGCSInput{
+	err = TestClient.DeleteGCS(&DeleteGCSInput{
 		Name:           "test",
 		ServiceVersion: 1,
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 
-	err = testClient.DeleteGCS(&DeleteGCSInput{
+	err = TestClient.DeleteGCS(&DeleteGCSInput{
 		Name:      "test",
 		ServiceID: "foo",
 	})
-	if err != ErrMissingServiceVersion {
+	if !errors.Is(err, ErrMissingServiceVersion) {
 		t.Errorf("bad error: %s", err)
 	}
 }

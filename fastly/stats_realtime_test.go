@@ -1,15 +1,16 @@
 package fastly
 
 import (
+	"errors"
 	"testing"
 )
 
 func TestClient_GetRealtimeStats_validation(t *testing.T) {
 	var err error
-	_, err = testStatsClient.GetRealtimeStats(&GetRealtimeStatsInput{
+	_, err = TestStatsClient.GetRealtimeStats(&GetRealtimeStatsInput{
 		ServiceID: "",
 	})
-	if err != ErrMissingServiceID {
+	if !errors.Is(err, ErrMissingServiceID) {
 		t.Errorf("bad error: %s", err)
 	}
 }
@@ -20,9 +21,9 @@ func TestStatsClient_GetRealtimeStats(t *testing.T) {
 	var err error
 
 	// Get
-	recordRealtimeStats(t, "realtime_stats/get", func(c *RTSClient) {
+	RecordRealtimeStats(t, "realtime_stats/get", func(c *RTSClient) {
 		_, err = c.GetRealtimeStats(&GetRealtimeStatsInput{
-			ServiceID: testServiceID,
+			ServiceID: TestDeliveryServiceID,
 			Timestamp: 0,
 			Limit:     ToPointer(uint32(3)),
 		})
@@ -40,9 +41,9 @@ func TestStatsClient_GetRealtimeStatsJSON(t *testing.T) {
 	}
 
 	var err error
-	recordRealtimeStats(t, "realtime_stats/get", func(c *RTSClient) {
+	RecordRealtimeStats(t, "realtime_stats/get", func(c *RTSClient) {
 		err = c.GetRealtimeStatsJSON(&GetRealtimeStatsInput{
-			ServiceID: testServiceID,
+			ServiceID: TestDeliveryServiceID,
 			Timestamp: 0,
 			Limit:     ToPointer(uint32(3)),
 		}, &ret)

@@ -10,7 +10,8 @@ import (
 	"time"
 )
 
-// https://developer.fastly.com/reference/api/services/resources/kv-store
+// https://www.fastly.com/documentation/reference/api/services/resources/kv-store/
+// https://www.fastly.com/documentation/reference/api/services/resources/kv-store-item/
 
 // KVStore represents an KV Store response from the Fastly API.
 type KVStore struct {
@@ -49,7 +50,7 @@ func (c *Client) CreateKVStore(i *CreateKVStoreInput) (*KVStore, error) {
 	defer resp.Body.Close()
 
 	var store *KVStore
-	if err := decodeBodyMap(resp.Body, &store); err != nil {
+	if err := DecodeBodyMap(resp.Body, &store); err != nil {
 		return nil, err
 	}
 	return store, nil
@@ -107,7 +108,7 @@ func (c *Client) ListKVStores(i *ListKVStoresInput) (*ListKVStoresResponse, erro
 	defer resp.Body.Close()
 
 	var output *ListKVStoresResponse
-	if err := decodeBodyMap(resp.Body, &output); err != nil {
+	if err := DecodeBodyMap(resp.Body, &output); err != nil {
 		return nil, err
 	}
 	return output, nil
@@ -187,7 +188,7 @@ func (c *Client) GetKVStore(i *GetKVStoreInput) (*KVStore, error) {
 	defer resp.Body.Close()
 
 	var output *KVStore
-	if err := decodeBodyMap(resp.Body, &output); err != nil {
+	if err := DecodeBodyMap(resp.Body, &output); err != nil {
 		return nil, err
 	}
 	return output, nil
@@ -243,6 +244,8 @@ const (
 type ListKVStoreKeysInput struct {
 	// Consistency determines accuracy of results (values: eventual, strong). i.e. 'eventual' uses caching to improve performance (default: strong)
 	Consistency Consistency
+	// Prefix limits the results to keys which begin with the specified string.
+	Prefix string
 	// Cursor is used for paginating through results.
 	Cursor string
 	// StoreID is the StoreID of the kv store to list keys for (required).
@@ -265,6 +268,10 @@ func (l *ListKVStoreKeysInput) formatFilters() map[string]string {
 
 	if l.Cursor != "" {
 		m["cursor"] = l.Cursor
+	}
+
+	if l.Prefix != "" {
+		m["prefix"] = l.Prefix
 	}
 
 	return m
@@ -296,7 +303,7 @@ func (c *Client) ListKVStoreKeys(i *ListKVStoreKeysInput) (*ListKVStoreKeysRespo
 	defer resp.Body.Close()
 
 	var output *ListKVStoreKeysResponse
-	if err := decodeBodyMap(resp.Body, &output); err != nil {
+	if err := DecodeBodyMap(resp.Body, &output); err != nil {
 		return nil, err
 	}
 	return output, nil
@@ -388,6 +395,79 @@ func (c *Client) GetKVStoreKey(i *GetKVStoreKeyInput) (string, error) {
 	return string(output), nil
 }
 
+// GetKVStoreItemInput is the input to the GetKVStoreItem function.
+type GetKVStoreItemInput struct {
+	// StoreID is the StoreID of the kv store (required).
+	StoreID string
+	// Key is the key of the item to fetch (required).
+	Key string
+}
+
+// GetKVStoreItemOutput is the output of the GetKVStoreItem function.
+type GetKVStoreItemOutput struct {
+	// Value is the value stored in the item. The caller of
+	// 'GetKVStoreItem' must ensure that 'Value.Close()' is
+	// executed if this field is non-nil.
+	Value io.ReadCloser
+	// Metadata is the metadata stored in the item, if any.
+	Metadata string
+	// Generation is the generation marker of the item.
+	Generation uint64
+}
+
+// ValueAsBytes obtains the value of a KV Store Item, as a slice of
+// bytes, by reading the 'Value' field in the structure returned by
+// 'GetKVStoreItem'. It also ensures that 'Close()' is executed on the
+// 'Value' field, so the caller does not need to do so.
+func (o *GetKVStoreItemOutput) ValueAsBytes() ([]byte, error) {
+	defer o.Value.Close()
+
+	return io.ReadAll(o.Value)
+}
+
+// ValueAsString obtains the value of a KV Store Item, as a string, by
+// reading the 'Value' field in the structure returned by
+// 'GetKVStoreItem'. It also ensures that 'Close()' is executed on the
+// 'Value' field, so the caller does not need to do so.
+func (o *GetKVStoreItemOutput) ValueAsString() (string, error) {
+	if result, err := o.ValueAsBytes(); err != nil {
+		return "", err
+	} else {
+		return string(result), nil
+	}
+}
+
+// GetKVStoreItem retrieves the specified item. The returned structure
+// contains a 'Value' field which the caller must clean up by
+// executing its 'Close' function if the field is non-nil.
+func (c *Client) GetKVStoreItem(i *GetKVStoreItemInput) (GetKVStoreItemOutput, error) {
+	if i.StoreID == "" {
+		return GetKVStoreItemOutput{}, ErrMissingStoreID
+	}
+	if i.Key == "" {
+		return GetKVStoreItemOutput{}, ErrMissingKey
+	}
+
+	path := ToSafeURL("resources", "stores", "kv", i.StoreID, "keys", i.Key)
+
+	resp, err := c.Get(path, nil)
+	if err != nil {
+		return GetKVStoreItemOutput{}, err
+	}
+
+	output := GetKVStoreItemOutput{Value: resp.Body}
+
+	output.Metadata = resp.Header.Get("metadata")
+
+	output.Generation, err = strconv.ParseUint(resp.Header.Get("generation"), 10, 64)
+	if err != nil {
+		resp.Body.Close()
+		return GetKVStoreItemOutput{}, err
+	}
+
+	return output, nil
+}
+
 // LengthReader represents a type that can be read and exposes its length.
 type LengthReader interface {
 	io.Reader
@@ -432,6 +512,32 @@ type InsertKVStoreKeyInput struct {
 	Key string
 	// Value is the value to insert (ignored if Body is set).
 	Value string
+	// IfGenerationMatch specifies a 'generation marker' value
+	// which must match the value on the specified key for the
+	// deletion to proceed.
+	IfGenerationMatch uint64
+	// Add specifies that the operation must fail if the key
+	// already exists.
+	Add bool
+	// Append specifies that the provided Body or Value will be
+	// appended to the key's existing value, if any.
+	Append bool
+	// Prepend specifies that the provided Body or Value will be
+	// prepended to the key's existing value, if any.
+	Prepend bool
+	// BackgroundFetch specifies that the new value for the key
+	// does not need to be immediately visible to other users of
+	// the store.
+	BackgroundFetch bool
+	// Metadata is a string which will be stored alongside the
+	// key's value. This is specified as a pointer-to-string so
+	// that existing metadata can be removed by specifying an
+	// empty string.
+	Metadata *string
+	// TimeToLiveSec specifies the number of seconds (from the
+	// completion of the insert/update operation) that the key
+	// should be retrievable.
+	TimeToLiveSec int
 }
 
 // InsertKVStoreKey inserts a key/value pair into an kv store.
@@ -445,6 +551,36 @@ func (c *Client) InsertKVStoreKey(i *InsertKVStoreKeyInput) error {
 
 	ro := RequestOptions{
 		Parallel: true, // This will allow the Fastly CLI to make bulk inserts.
+		Params:   map[string]string{},
+		Headers:  map[string]string{},
+	}
+
+	if i.IfGenerationMatch != 0 {
+		ro.Headers["if-generation-match"] = strconv.FormatUint(i.IfGenerationMatch, 10)
+	}
+
+	if i.Add {
+		ro.Params["add"] = "true"
+	}
+
+	if i.Append {
+		ro.Params["append"] = "true"
+	}
+
+	if i.Prepend {
+		ro.Params["prepend"] = "true"
+	}
+
+	if i.BackgroundFetch {
+		ro.Params["background_fetch"] = "true"
+	}
+
+	if i.Metadata != nil {
+		ro.Headers["metadata"] = *i.Metadata
+	}
+
+	if i.TimeToLiveSec != 0 {
+		ro.Headers["time_to_live_sec"] = strconv.Itoa(i.TimeToLiveSec)
 	}
 
 	if i.Body != nil {
@@ -463,8 +599,12 @@ func (c *Client) InsertKVStoreKey(i *InsertKVStoreKeyInput) error {
 	}
 	defer resp.Body.Close()
 
-	_, err = checkResp(resp, err)
-	return err
+	ignored, err := checkResp(resp, err)
+	if err != nil {
+		return err
+	}
+	defer ignored.Body.Close()
+	return nil
 }
 
 // DeleteKVStoreKeyInput is the input to the DeleteKVStoreKey function.
@@ -473,6 +613,13 @@ type DeleteKVStoreKeyInput struct {
 	StoreID string
 	// Key is the key to delete (required).
 	Key string
+	// Force is a flag to ignore a failure if the specified key
+	// was not found.
+	Force bool
+	// IfGenerationMatch specifies a 'generation marker' value
+	// which must match the value on the specified key for the
+	// deletion to proceed.
+	IfGenerationMatch uint64
 }
 
 // DeleteKVStoreKey deletes the specified resource.
@@ -486,6 +633,16 @@ func (c *Client) DeleteKVStoreKey(i *DeleteKVStoreKeyInput) error {
 
 	ro := RequestOptions{
 		Parallel: true, // This will allow the Fastly CLI to make bulk deletes.
+		Params:   map[string]string{},
+		Headers:  map[string]string{},
+	}
+
+	if i.Force {
+		ro.Params["force"] = "true"
+	}
+
+	if i.IfGenerationMatch != 0 {
+		ro.Headers["if-generation-match"] = strconv.FormatUint(i.IfGenerationMatch, 10)
 	}
 
 	path := ToSafeURL("resources", "stores", "kv", i.StoreID, "keys", i.Key)
@@ -534,6 +691,10 @@ func (c *Client) BatchModifyKVStoreKey(i *BatchModifyKVStoreKeyInput) error {
 	}
 	defer resp.Body.Close()
 
-	_, err = checkResp(resp, err)
-	return err
+	ignored, err := checkResp(resp, err)
+	if err != nil {
+		return err
+	}
+	defer ignored.Body.Close()
+	return nil
 }

@@ -1,5 +1,118 @@
 # Changelog
 
+## [UNRELEASED]
+
+[Full Changelog](https://github.com/fastly/go-fastly/compare/v9.14.0...)
+
+### Breaking:
+
+- fix(vcl_snippets): Correct type of 'Priority' field from integer to string. [#644](https://github.com/fastly/go-fastly/pull/644)
+- fix(datacenters): fix spelling of `Longitude` field [#646](https://github.com/fastly/go-fastly/pull/646)
+
+### Enhancements:
+- fix(client): add ability to pass context into the client [#647](https://github.com/fastly/go-fastly/pull/647)
+
+### Bug fixes:
+
+### Dependencies:
+- build(deps): `golang.org/x/crypto` from 0.35.0 to 0.36.0 ([#639](https://github.com/fastly/go-fastly/pull/639))
+- build(deps): `golang.org/x/mod` from 0.23.0 to 0.24.0 ([#642](https://github.com/fastly/go-fastly/pull/642))
+- build(deps): `golang.org/x/tools` from 0.30.0 to 0.31.0 ([#640](https://github.com/fastly/go-fastly/pull/640))
+- build(deps): `honnef.co/go/tools` from 0.6.0 to 0.6.1 ([#641](https://github.com/fastly/go-fastly/pull/641))
+- build(deps): `github.com/BurntSushi/toml` from 1.4.1-0.20240526193622-a339e1f7089c to 1.5.0 ([#645](https://github.com/fastly/go-fastly/pull/645))
+
+## [v9.14.0](https://github.com/fastly/go-fastly/releases/tag/v9.14.0) (2025-03-05)
+
+[Full Changelog](https://github.com/fastly/go-fastly/compare/v9.13.1...v9.14.0)
+
+### Enhancements:
+
+ - feat(fastly/objectstorage): adds crud operations for access keys in object storage [#612](https://github.com/fastly/go-fastly/pull/612)
+ - feat(kv_store): Adds support for all documented KV Store API features. [#630](https://github.com/fastly/go-fastly/pull/630)
+
+### Bug fixes:
+
+ - fix(automation_tokens): Fix decodeBodyMap for string to time.Time [#619](https://github.com/fastly/go-fastly/pull/619)
+
+### Dependencies:
+
+- build(deps): `github.com/google/go-cmp` from 0.6.0 to 0.7.0 ([#617](https://github.com/fastly/go-fastly/pull/617))
+- build(deps): upgrade Go from 1.22 to 1.23 ([#624](https://github.com/fastly/go-fastly/pull/624/files))
+- build(deps): `honnef.co/go/tools` from 0.5.1 to 0.6.0 ([#610](https://github.com/fastly/go-fastly/pull/610))
+- build(deps): `golang.org/x/crypto` from 0.33.0 to 0.35.0 ([#618](https://github.com/fastly/go-fastly/pull/618))
+
+## [v9.13.1](https://github.com/fastly/go-fastly/releases/tag/v9.13.1) (2025-02-14)
+
+[Full Changelog](https://github.com/fastly/go-fastly/compare/v9.13.0...v9.13.1)
+
+**Bug fixes:**
+
+- fix(computeacls): lookup call to treat status 204 properly [#605](https://github.com/fastly/go-fastly/pull/605)
+- fix(fastly): ensure that HTTP response body objects are always closed [#592](https://github.com/fastly/go-fastly/pull/592)
+
+**Dependencies:**
+
+- build(deps): upgrade Go from 1.20 to 1.22 [#606](https://github.com/fastly/go-fastly/pull/606)
+- build(deps): bump golang.org/x/crypto from 0.32.0 to 0.33.0 [#601](https://github.com/fastly/go-fastly/pull/601)
+- build(deps): bump golang.org/x/tools from 0.29.0 to 0.30.0 [#598](https://github.com/fastly/go-fastly/pull/598)
+- build(deps): bump golang.org/x/sys from 0.29.0 to 0.30.0 [#597](https://github.com/fastly/go-fastly/pull/597)
+
+## [v9.13.0](https://github.com/fastly/go-fastly/releases/tag/v9.13.0) (2025-01-27)
+
+[Full Changelog](https://github.com/fastly/go-fastly/compare/v9.12.0...v9.13.0)
+
+**Enhancements:**
+
+- feat(origin_inspector): Add `limit` query parameter [#568](https://github.com/fastly/go-fastly/pull/568)
+- feat(products): Product-specific enablement and configuration [#570](https://github.com/fastly/go-fastly/pull/570)
+- feat(domains_v1): Add support for new UDM endpoints [#577](https://github.com/fastly/go-fastly/pull/577)
+- feat(computeacls): Add support for compute platform ACLs [#574](https://github.com/fastly/go-fastly/pull/574)
+
+**Bug fixes:**
+
+- fix(domains): Parse error response correctly [#579](https://github.com/fastly/go-fastly/pull/579)
+- fix(products): Improve API usability [#572](https://github.com/fastly/go-fastly/pull/572)
+
+**Dependencies:**
+
+- build(deps): bump github.com/google/go-cmp from 0.5.8 to 0.6.0 [#580](https://github.com/fastly/go-fastly/pull/580)
+- build(deps): bump github.com/mitchellh/mapstructure from 1.4.3 to 1.5.0 [#580](https://github.com/fastly/go-fastly/pull/580)
+- build(deps): bump github.com/peterhellberg/link from 1.1.0 to 1.2.0 [#580](https://github.com/fastly/go-fastly/pull/580)
+- build(deps): bump golang.org/x/crypto from 0.31.0 to 0.32.0 [#580](https://github.com/fastly/go-fastly/pull/580)
+- build(deps): bump honnef.co/go/tools from 0.4.7 to 0.5.1 [#586](https://github.com/fastly/go-fastly/pull/586)
+- build(deps): bump golang.org/x/tools from 0.15.0 to 0.29.0 [#587](https://github.com/fastly/go-fastly/pull/587)
+
+## [v9.12.0](https://github.com/fastly/go-fastly/releases/tag/v9.12.0) (2024-11-07)
+
+[Full Changelog](https://github.com/fastly/go-fastly/compare/v9.11.0...v9.12.0)
+
+**Breaking:**
+
+Note that in spite of this *breaking* change, the major version number
+of the package was not incremented, as the feature which was removed
+did not work and no users of the package could have been relying on
+it.
+
+- breaking(product_enablement): Remove support for NGWAF product. [#560](https://github.com/fastly/go-fastly/pull/560)
+
+**Enhancements:**
+
+- feat(stats_historical): add origin statistics [#552](https://github.com/fastly/go-fastly/pull/552)
+- feat(stats_historical): add fields with all prefix [#553](https://github.com/fastly/go-fastly/pull/553)
+- Add GrafanaCloudLogs as an logging enpoint [#556](https://github.com/fastly/go-fastly/pull/556)
+- feat(product_enablement): Add support for Log Explorer & Insights product. [#558](https://github.com/fastly/go-fastly/pull/558)
+
+**Bug fixes:**
+
+- fix(logging_grafanacloudlogs): Fix Grafana Cloud Logs errors [#559](https://github.com/fastly/go-fastly/pull/559)
+- fix(debug_mode): Fix FASTLY_DEBUG_MODE when used in combination with go-vcr. [#561](https://github.com/fastly/go-fastly/pull/561)
+- test(infrastructure): Add support for testing against both Delivery and Compute services. [#562](https://github.com/fastly/go-fastly/pull/562)
+- test(product_enablement): Add test suites for all supported products. [#563](https://github.com/fastly/go-fastly/pull/563)
+
+**Dependencies:**
+
+- build(deps): Unpin staticcheck, 'latest' version is acceptable. [#549](https://github.com/fastly/go-fastly/pull/549)
+
 ## [v9.11.0](https://github.com/fastly/go-fastly/releases/tag/v9.11.0) (2024-10-01)
 
 [Full Changelog](https://github.com/fastly/go-fastly/compare/v9.10.0...v9.11.0)

@@ -1,0 +1,323 @@
+---
+version: 1
+interactions:
+- request:
+    body: ""
+    form: {}
+    headers:
+      User-Agent:
+      - FastlyGo/9.13.0 (+github.com/fastly/go-fastly; go1.23.3)
+    url: https://api.fastly.com/resources/acls/twgcU5NNpY0GsVfsCav4o6/entries?limit=1
+    method: GET
+  response:
+    body: '{"entries":[{"prefix":"1.2.3.0/24","action":"BLOCK"}],"meta":{"next_cursor":"LDE=","limit":1}}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Cache-Control:
+      - no-store
+      Content-Length:
+      - "94"
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Feb 2025 23:49:35 GMT
+      Pragma:
+      - no-cache
+      Server:
+      - fastly
+      Strict-Transport-Security:
+      - max-age=31536000
+      Via:
+      - 1.1 varnish
+      X-Cache:
+      - MISS
+      X-Cache-Hits:
+      - "0"
+      X-Served-By:
+      - cache-mia-kmia1760034-MIA, cache-mia-kmia1760066-MIA
+      X-Timer:
+      - S1739404175.587710,VS0,VE482
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      User-Agent:
+      - FastlyGo/9.13.0 (+github.com/fastly/go-fastly; go1.23.3)
+    url: https://api.fastly.com/resources/acls/twgcU5NNpY0GsVfsCav4o6/entry/1.2.3.0
+    method: GET
+  response:
+    body: '{"prefix":"1.2.3.0/24","action":"BLOCK"}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Cache-Control:
+      - no-store
+      Content-Length:
+      - "40"
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Feb 2025 23:49:35 GMT
+      Pragma:
+      - no-cache
+      Server:
+      - fastly
+      Strict-Transport-Security:
+      - max-age=31536000
+      Via:
+      - 1.1 varnish
+      X-Cache:
+      - MISS
+      X-Cache-Hits:
+      - "0"
+      X-Served-By:
+      - cache-mia-kmia1760036-MIA, cache-mia-kmia1760066-MIA
+      X-Timer:
+      - S1739404175.143855,VS0,VE322
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      User-Agent:
+      - FastlyGo/9.13.0 (+github.com/fastly/go-fastly; go1.23.3)
+    url: https://api.fastly.com/resources/acls/twgcU5NNpY0GsVfsCav4o6/entries?cursor=LDE%3D&limit=1
+    method: GET
+  response:
+    body: '{"entries":[{"prefix":"1.2.3.4/32","action":"ALLOW"}],"meta":{"next_cursor":"Q2g5MGQyZGpWVFZPVG5CWk1FZHpWbVp6UTJGMk5HODJYMjUyTkY4d01EQXgsMA==","limit":1}}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Cache-Control:
+      - no-store
+      Content-Length:
+      - "154"
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Feb 2025 23:49:35 GMT
+      Pragma:
+      - no-cache
+      Server:
+      - fastly
+      Strict-Transport-Security:
+      - max-age=31536000
+      Via:
+      - 1.1 varnish
+      X-Cache:
+      - MISS
+      X-Cache-Hits:
+      - "0"
+      X-Served-By:
+      - cache-mia-kmia1760031-MIA, cache-mia-kmia1760066-MIA
+      X-Timer:
+      - S1739404176.555740,VS0,VE184
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      User-Agent:
+      - FastlyGo/9.13.0 (+github.com/fastly/go-fastly; go1.23.3)
+    url: https://api.fastly.com/resources/acls/twgcU5NNpY0GsVfsCav4o6/entry/1.2.3.4
+    method: GET
+  response:
+    body: '{"prefix":"1.2.3.4/32","action":"ALLOW"}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Cache-Control:
+      - no-store
+      Content-Length:
+      - "40"
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Feb 2025 23:49:36 GMT
+      Pragma:
+      - no-cache
+      Server:
+      - fastly
+      Strict-Transport-Security:
+      - max-age=31536000
+      Via:
+      - 1.1 varnish
+      X-Cache:
+      - MISS
+      X-Cache-Hits:
+      - "0"
+      X-Served-By:
+      - cache-mia-kmia1760089-MIA, cache-mia-kmia1760066-MIA
+      X-Timer:
+      - S1739404176.759977,VS0,VE386
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      User-Agent:
+      - FastlyGo/9.13.0 (+github.com/fastly/go-fastly; go1.23.3)
+    url: https://api.fastly.com/resources/acls/twgcU5NNpY0GsVfsCav4o6/entries?cursor=Q2g5MGQyZGpWVFZPVG5CWk1FZHpWbVp6UTJGMk5HODJYMjUyTkY4d01EQXgsMA%3D%3D&limit=1
+    method: GET
+  response:
+    body: '{"entries":[{"prefix":"23.23.23.23/32","action":"ALLOW"}],"meta":{"next_cursor":"Q2g5MGQyZGpWVFZPVG5CWk1FZHpWbVp6UTJGMk5HODJYMjUyTkY4d01ERTMsMA==","limit":1}}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Cache-Control:
+      - no-store
+      Content-Length:
+      - "158"
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Feb 2025 23:49:36 GMT
+      Pragma:
+      - no-cache
+      Server:
+      - fastly
+      Strict-Transport-Security:
+      - max-age=31536000
+      Via:
+      - 1.1 varnish
+      X-Cache:
+      - MISS
+      X-Cache-Hits:
+      - "0"
+      X-Served-By:
+      - cache-mia-kmia1760050-MIA, cache-mia-kmia1760066-MIA
+      X-Timer:
+      - S1739404176.267881,VS0,VE312
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      User-Agent:
+      - FastlyGo/9.13.0 (+github.com/fastly/go-fastly; go1.23.3)
+    url: https://api.fastly.com/resources/acls/twgcU5NNpY0GsVfsCav4o6/entry/23.23.23.23
+    method: GET
+  response:
+    body: '{"prefix":"23.23.23.23/32","action":"ALLOW"}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Cache-Control:
+      - no-store
+      Content-Length:
+      - "44"
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Feb 2025 23:49:36 GMT
+      Pragma:
+      - no-cache
+      Server:
+      - fastly
+      Strict-Transport-Security:
+      - max-age=31536000
+      Via:
+      - 1.1 varnish
+      X-Cache:
+      - MISS
+      X-Cache-Hits:
+      - "0"
+      X-Served-By:
+      - cache-mia-kmia1760085-MIA, cache-mia-kmia1760066-MIA
+      X-Timer:
+      - S1739404177.680044,VS0,VE216
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      User-Agent:
+      - FastlyGo/9.13.0 (+github.com/fastly/go-fastly; go1.23.3)
+    url: https://api.fastly.com/resources/acls/twgcU5NNpY0GsVfsCav4o6/entries?cursor=Q2g5MGQyZGpWVFZPVG5CWk1FZHpWbVp6UTJGMk5HODJYMjUyTkY4d01ERTMsMA%3D%3D&limit=1
+    method: GET
+  response:
+    body: '{"entries":[{"prefix":"192.168.0.0/16","action":"BLOCK"}],"meta":{"limit":1}}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Cache-Control:
+      - no-store
+      Content-Length:
+      - "77"
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Feb 2025 23:49:37 GMT
+      Pragma:
+      - no-cache
+      Server:
+      - fastly
+      Strict-Transport-Security:
+      - max-age=31536000
+      Via:
+      - 1.1 varnish
+      X-Cache:
+      - MISS
+      X-Cache-Hits:
+      - "0"
+      X-Served-By:
+      - cache-mia-kmia1760055-MIA, cache-mia-kmia1760066-MIA
+      X-Timer:
+      - S1739404177.913090,VS0,VE331
+    status: 200 OK
+    code: 200
+    duration: ""
+- request:
+    body: ""
+    form: {}
+    headers:
+      User-Agent:
+      - FastlyGo/9.13.0 (+github.com/fastly/go-fastly; go1.23.3)
+    url: https://api.fastly.com/resources/acls/twgcU5NNpY0GsVfsCav4o6/entry/192.168.0.0
+    method: GET
+  response:
+    body: '{"prefix":"192.168.0.0/16","action":"BLOCK"}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Cache-Control:
+      - no-store
+      Content-Length:
+      - "44"
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 12 Feb 2025 23:49:37 GMT
+      Pragma:
+      - no-cache
+      Server:
+      - fastly
+      Strict-Transport-Security:
+      - max-age=31536000
+      Via:
+      - 1.1 varnish
+      X-Cache:
+      - MISS
+      X-Cache-Hits:
+      - "0"
+      X-Served-By:
+      - cache-mia-kmia1760052-MIA, cache-mia-kmia1760066-MIA
+      X-Timer:
+      - S1739404177.261046,VS0,VE90
+    status: 200 OK
+    code: 200
+    duration: ""
