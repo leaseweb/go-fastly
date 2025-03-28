@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 	"strconv"
 	"time"
@@ -33,6 +34,8 @@ type ListCustomTLSCertificatesInput struct {
 	FilterNotAfter string
 	// FilterTLSDomainsID limits the returned certificates to those that include the specific domain.
 	FilterTLSDomainsID string
+	// FilterMultipleTLSDomainsID limits the returned certificates to those that include given domains.
+	FilterMultipleTLSDomainsID []string
 	// Include captures related objects. Optional, comma-separated values. Permitted values: tls_activations.
 	Include string
 	// PageNumber is the page index for pagination.
@@ -87,6 +90,83 @@ func (c *Client) ListCustomTLSCertificates(i *ListCustomTLSCertificatesInput) ([
 	}
 
 	resp, err := c.Get(path, filters)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	data, err := jsonapi.UnmarshalManyPayload(resp.Body, reflect.TypeOf(new(CustomTLSCertificate)))
+	if err != nil {
+		return nil, err
+	}
+
+	cc := make([]*CustomTLSCertificate, len(data))
+	for i := range data {
+		typed, ok := data[i].(*CustomTLSCertificate)
+		if !ok {
+			return nil, fmt.Errorf("unexpected response type: %T", data[i])
+		}
+		cc[i] = typed
+	}
+
+	return cc, nil
+}
+
+// formatFiltersMultipleDomains converts user input with multiple domains into query parameters for filtering.
+func (i *ListCustomTLSCertificatesInput) formatFiltersMultipleDomains() url.Values {
+	var tlsDomainsID = "filter[tls_domains.id][]"
+
+	result := url.Values{}
+
+	pairings := map[string]any{
+		"filter[in_use]":             i.FilterInUse,
+		"filter[not_after]":          i.FilterNotAfter,
+		tlsDomainsID:                 i.FilterTLSDomainsID,
+		"include":                    i.Include,
+		jsonapi.QueryParamPageSize:   i.PageSize,
+		jsonapi.QueryParamPageNumber: i.PageNumber,
+		"sort":                       i.Sort,
+	}
+
+	for key, value := range pairings {
+		switch t := value.(type) {
+		case string:
+			if t != "" {
+				result.Add(key, t)
+			}
+		case int:
+			if t != 0 {
+				result.Add(key, strconv.Itoa(t))
+			}
+
+		case *bool:
+			if t != nil {
+				result.Add(key, strconv.FormatBool(*t))
+			}
+		}
+	}
+
+	if len(i.FilterMultipleTLSDomainsID) > 0 {
+		for _, domain := range i.FilterMultipleTLSDomainsID {
+			result.Add(tlsDomainsID, domain)
+		}
+
+	}
+
+	return result
+}
+
+// ListCustomTLSCertificatesByMultipleDomains retrieves all resources with multiple domains. CHANGE IT
+func (c *Client) ListCustomTLSCertificatesByMultipleDomains(i *ListCustomTLSCertificatesInput) ([]*CustomTLSCertificate, error) {
+	path := "/tls/certificates"
+	filters := &RequestOptionsMultipleDomains{
+		Params: i.formatFiltersMultipleDomains(),
+		Headers: map[string]string{
+			"Accept": jsonapi.MediaType, // this is required otherwise the filters don't work
+		},
+	}
+
+	resp, err := c.GetWithUrlValues(path, filters)
 	if err != nil {
 		return nil, err
 	}
