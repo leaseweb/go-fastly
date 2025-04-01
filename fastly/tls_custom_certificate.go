@@ -114,14 +114,12 @@ func (c *Client) ListCustomTLSCertificates(i *ListCustomTLSCertificatesInput) ([
 
 // formatFiltersMultipleDomains converts user input with multiple domains into query parameters for filtering.
 func (i *ListCustomTLSCertificatesInput) formatFiltersMultipleDomains() url.Values {
-	var tlsDomainsID = "filter[tls_domains.id][]"
-
 	result := url.Values{}
 
 	pairings := map[string]any{
 		"filter[in_use]":             i.FilterInUse,
 		"filter[not_after]":          i.FilterNotAfter,
-		tlsDomainsID:                 i.FilterTLSDomainsID,
+		"filter[tls_domains.id][]":   i.FilterMultipleTLSDomainsID,
 		"include":                    i.Include,
 		jsonapi.QueryParamPageSize:   i.PageSize,
 		jsonapi.QueryParamPageNumber: i.PageNumber,
@@ -143,14 +141,14 @@ func (i *ListCustomTLSCertificatesInput) formatFiltersMultipleDomains() url.Valu
 			if t != nil {
 				result.Add(key, strconv.FormatBool(*t))
 			}
-		}
-	}
 
-	if len(i.FilterMultipleTLSDomainsID) > 0 {
-		for _, domain := range i.FilterMultipleTLSDomainsID {
-			result.Add(tlsDomainsID, domain)
+		case []string:
+			if len(t) > 0 {
+				for _, value := range t {
+					result.Add(key, value)
+				}
+			}
 		}
-
 	}
 
 	return result
